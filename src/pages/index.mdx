@@ -1,0 +1,1698 @@
+import Layout from "../layout";
+
+import calldata from "../img/calldata.svg";
+import generic_contract from "../img/generic_contract.svg";
+import generic_data from "../img/generic_data.svg";
+import issues_table from "../img/issues_table.svg";
+import metadata_inheritence from "../img/metadata_inheritence.svg";
+import minter_inheritence from "../img/minter_inheritence.svg";
+import placeholder from "../img/placeholder.svg";
+import return_data from "../img/return_data.svg";
+import risk_model from "../img/risk_model.svg";
+import storage_layout from "../img/storage_layout.svg";
+import teleporter_inheritence from "../img/teleporter_inheritence.svg";
+import token_lifecycle from "../img/token_lifecycle.svg";
+import token_supply_chart from "../img/token_supply_chart.svg";
+import token_supply_tree from "../img/token_supply_tree.svg";
+import token from "../img/token.svg";
+import role_chart from "../img/role_chart.svg";
+
+export default Layout;
+
+# Avastars Smart Contract Audit Report
+
+v0.3.0<br/>
+5 March 2020<br/>
+[@nicholashc](https://github.com/nicholashc)<br/>
+
+---
+
+<br/>
+<br/>
+<br/>
+*note placeholders images...*
+<br/>
+
+<img src={generic_contract} width="300" alt="generic_contract" />
+
+<img src={generic_data} width="1200" alt="generic_data" />
+
+## Introduction
+
+_note placeholder words for introduction..._
+
+### Objectives
+
+_note revise this content and reformat for public audience..._
+
+The goal of this audit is to analyze the smart contracts for security vulnerabilities, uncover unintended behaviour, and anticipate potential risks that could exist in an adversarial production environment. The report identifies specific security issues and offers actionable recommendations categorized by Risk Level. It also analyzes the design and implementation of the project as a whole, including the contract architecture, trust model, and game theoretic threats. Finally, the report considers how the complexity of the contracts, test coverage, documentation, and quality of the code base impact the security of the application.
+
+### Scope and Timeline
+
+In the week since receiving the audit report, the Avastars team has worked diligently to address the issues in the code base. This report updates the status of any outstanding items and considers the effectiveness of the remediations. It also adds recommendations, clarifications, and/or corrections where required.
+
+This update considers all changes to the smart contract code up to commit [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842). Please note that this is not a comprehensive re-audit. This effort is limited to a brief manual review of the highest priority issues and modified sections of code.
+
+The revisions successfully addressed the most serious security issues. Many of the lower priority recommendations were also incorporated. I have reviewed each issue with the Avastars team and discussed the solutions. In some cases, the team acknowledged an issue but decided that the best course of action was not to change the contracts directly. In other cases, the team carefully considered whether the security concerns and/or design tradeoffs fell within an acceptable range of operational risk.
+
+This report contains the results from the security audit of the Avastars smart contract code base. The code reviewed includes the Solidity smart contracts from PR#1 [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) on the master branch of the [Avastars-Contracts](https://github.com/Dapp-Wizards/Avastars-Contracts/) repo. A complete list of the files reviewed is available in the [Appendix](#a01-smart-contracts-reviewed).
+
+It also includes an updated analysis of four issues from the [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea) commit. These issues were a part of the Preliminary Report delivered on 12/01/20.
+
+See [Version History](#) for more information.
+
+## Project Overview
+
+### Contract Architecture
+
+Once live, the Avastars contracts will live at 4 addresses. These are made up of 17 core Avastars contracts, including 2 interfaces. In addition, the code base inherits 5 contracts, 4 libraries, and 5 interfaces from the OpenZeppelin smart contract repository. All four contracts have the ability to be paused and upgraded by a permissioned administrator.
+
+##### AvastarTeleporter
+
+This contract manages the Avastar, Prime, and Replicant tokens. It holds the token state, mints new tokens, manages ERC-721 functionality, and stores trait and attribution information. AvastarTeleporter is not designed to receive ether.
+
+The current AvastarTeleporter main-net contract is located at [0xF3E778F839934fC819cFA1040AabaCeCBA01e049](https://etherscan.io/address/0xf3e778f839934fc819cfa1040aabacecba01e049#code).
+
+<img src={teleporter_inheritence} width="1200" alt="teleporter_inheritence" />
+
+| Address                                                                                | Permissions  | Notes                       |
+| :------------------------------------------------------------------------------------- | :----------- | :-------------------------- |
+| [0xeff045...](https://etherscan.io/address/0xeff045036321258117FF9cF15f67Ac22a51c01D9) | admin        | deployer, EOA               |
+| [0x4C7BEd...](https://etherscan.io/address/0x4C7BEdfA26C744e6bd61CBdF86F3fc4a76DCa073) | admin, owner | EOA                         |
+| [0xE31763...](https://etherscan.io/address/0xE31763aaD9294f073DDF18B36503ed037ae5e737) | minter       | AvastarPrimeMinter contract |
+| [0xb60dfb...](https://etherscan.io/address/0xb60dfb4F11B38990911E8F8569B8b72DdBFB0411) | minter       | EOA                         |
+
+\*EOA = Externally-owned account (non-contract)
+
+##### AvastarMetadata
+
+This contract assembles the artwork and metadata associated with the tokens. It calls the AvastarTeleporter to read from its state. AvastarMetadata is not designed to receive ether or handle ERC-721 tokens.
+
+The current AvastarMetadata main-net contract is located at [0xE895B49900636F0330c3dc2Fb6FA09d234622E8e](https://etherscan.io/address/0xe895b49900636f0330c3dc2fb6fa09d234622e8e#code).
+
+<img src={metadata_inheritence} width="1200" alt="metadata_inheritence" />
+
+| Address                                                                                | Permissions  | Notes         |
+| :------------------------------------------------------------------------------------- | :----------- | :------------ |
+| [0xeff045...](https://etherscan.io/address/0xeff045036321258117FF9cF15f67Ac22a51c01D9) | admin        | deployer, EOA |
+| [0x4C7BEd...](https://etherscan.io/address/0x4C7BEdfA26C744e6bd61CBdF86F3fc4a76DCa073) | admin, owner | EOA           |
+
+##### AvastarPrimeMinter
+
+This contract accepts deposits from users who wish to purchase Primes. When triggered by a permissioned minter transaction, it initiates the minting of new Prime tokens by calling the AvastarTeleporter. AvastarPrimeMinter has the ability to both send and receive ether. It is not designed to receive ERC-721 tokens.
+
+The current AvastarPrimeMinter main-net contract is located at [0xE31763aaD9294f073DDF18B36503ed037ae5e737](https://etherscan.io/address/0xe31763aad9294f073ddf18b36503ed037ae5e737#code).
+
+<img src={minter_inheritence} width="1200" alt="minter_inheritence" />
+
+| Address                                                                                | Permissions  | Notes         |
+| :------------------------------------------------------------------------------------- | :----------- | :------------ |
+| [0xeff045...](https://etherscan.io/address/0xeff045036321258117FF9cF15f67Ac22a51c01D9) | admin        | deployer, EOA |
+| [0x4C7BEd...](https://etherscan.io/address/0x4C7BEdfA26C744e6bd61CBdF86F3fc4a76DCa073) | admin, owner | EOA           |
+| [0xb60dfb...](https://etherscan.io/address/0xb60dfb4F11B38990911E8F8569B8b72DdBFB0411) | minter       | EOA           |
+| [0xF3d450...](https://etherscan.io/address/0xF3d4508ee61FF93B83dEE4f7ACEdfd82A8b18184) | minter       | no tx history |
+| [0x6ca2E2...](https://etherscan.io/address/0x6ca2E2Fabb61017706c2D796eE3AC3258441C3fe) | minter       | no tx history |
+| [0x7A8C27...](https://etherscan.io/address/0x7A8C27f71641Df9F0b86bf1280D66B3C2d92096A) | minter       | no tx history |
+| [0x56bCBC...](https://etherscan.io/address/0x56bCBCc51489fe9fAaAFbBE81177A03aD413cD3d) | minter       | no tx history |
+| [0xF7e85F...](https://etherscan.io/address/0xF7e85F15462Ced330463030f340018ea1Ea03b36) | minter       | no tx history |
+| [0xb3e1d8...](https://etherscan.io/address/0xb3e1d813487aFfBCF327C5FB4DA1Ae29584B7FC3) | minter       | no tx history |
+| [0xF15DE3...](https://etherscan.io/address/0xF15DE3db897050c5B641290E090E1f6106791DE1) | minter       | no tx history |
+
+##### AvastarReplicantMinter
+
+This contract is still in development, but has much of the same functionality as AvastarPrimeMinter.
+
+### Token Design
+
+Avastars tokens are ERC-721 compliant non-fungible tokens. An Avastar can be part one of two waves: Prime or Replicant. Primes are minted within unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored onchain as svg layers.
+
+Replicants are produced from Primes by recombining their Traits. The supply of Replicants is not specified in the contracts but is designed to never surpass the supply of Primes.
+Users can mint Primes by depositing funds in the smart contract. An admin account then sends a 2nd callback transaction with the genome, traits, and other features as calldata. The transaction accounts for the user's funds in escrow and mints the corresponding token.
+
+_note draft image..._
+
+<img src={token_supply_tree} width="1200" alt="token_supply_tree" />
+
+- Generations: 5
+- Series: 5 per generation, plus promos
+- Promo Primes per generation: 200
+- Primes per series: 5,000
+- 25,200 Primes per generation and 126,000 all time across the 5 generations
+- 25,200 Replicants per generation and 126,000 all time across the 5 generations
+- There can be maximum of 252,000 total Avastars
+
+_note draft image..._
+
+<img src={token_lifecycle} width="1200" alt="token_lifecycle" />
+
+### Trust Model, Access, and Authority
+
+All contracts define the same three permissioned roles. However, these are set independently in each contract and the addresses holding a role in one contract do not necessarily hold it in another. Multiple addresses can hold the same role in a given contract. The same address can hold multiple permissioned roles in the same or across contracts. Once assigned, a role cannot be taken away.
+
+##### onlySysAdmin
+
+The admin role has the highest level of permissions. It can assign any other role, pause and unpause, upgrade the contract, and set other permissioned state variables.
+
+##### onlyMinter
+
+The minter role has access to minting new Prime and Replicant tokens. In order for users to make purchases, the AvastarPrimeMinter and AvastarReplicantMinter contracts must hold the minter role in the AvastarTeleporter contract.
+
+##### onlyOwner
+
+The owner role controls the ability to view and withdraw ether from the sale of Primes and Replicants in the two Minter contracts.
+
+_note add note on "bus factor"..._
+
+<img src={role_chart} width="500" alt="role_chart" />
+
+### Documentation, Code Quality, and Testing
+
+The project is throughly and consistently documented. The code comments are rigorous and clearly explain technical decisions. The truffle project is well-organized. The high-level design decisions are explicit. The caliber of the Avastars documentation will be a huge asset in moving smoothly through the audit process.The smart contracts are accompanied by suite of 105 unit tests (all passing) as well as gas estimates for each function call. This has since been updated to ... tests
+
+### Security Considerations
+
+Based on the initially assessment of the smart contract architecture, the following areas will receive particular attention during the full audit:
+
+- input validation and type safety
+- minting, transferring, and approving access to tokens and traits ether deposits and withdraws
+- contract set up, upgradability, and interdependency
+- data validation during external calls and interface checks admin permissions
+- internal accounting and token supply
+- race conditions and denial of service vectors
+
+## Key Observations
+
+### Summary of Issues
+
+<img src={issues_table} width="1200" alt="issues_table" />
+<br/>
+
+### General Assessment
+
+_note update to be in present tense..._
+
+- 50 issues of varying severity were identified during the audit (including 4 previously catalogued in the 12/01/20 Preliminary Assessment) (one removed)
+- The vast majority of issues are relatively minor in nature. Many of the High and Medium severity issues can be fixed will minimal changes to the code base
+- The code quality, test suite, and project documentation is of a consistently high caliber
+- The contract architecture attempts to minimize potential attack surfaces as much as possible. For example, there is only a single payable function in the entire project and only two functions designed to withdraw ether
+- The contracts use complex and state-intensive data structures to manage tokens. A number of the more serious vulnerabilities come from type or validation issues or unexpected state access
+- The contracts rely heavily on malleable properties like array lengths to keep track of critical global state values
+- The Avastars team has stated that optimizing gas costs is not the highest priority. They are paying the cost of loading large amounts of state into the contracts as well as minting tokens on behalf of users
+- Privileged access and permissions allow administrators to manage token minting, collect ether, and configure the contracts
+- This trust model allows the administrators to manage a number of operational tasks such as setting prices, generating hashes, and managing the minting process off chain
+- Maintaining this level of control was a conscious design decision. However, it comes with the trade off of requiring that users trust the project's administrators
+- The application requires ongoing actions from the administrators to function
+- The contracts can be paused and upgrade by the administrators at any time
+
+## Critical Severity
+
+No critical issues were found.
+
+## High Severity
+
+### H01: Replicated Traits Not Updated in Storage
+
+##### Description
+
+The `useTraits()` function does not correctly store a state change tracking replicated traits. On [L160](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarTeleporter.sol#L160) in the AvastarTeleporter contract, the function copies the Prime struct in memory.
+
+```solidity
+Prime memory prime = primesByGeneration[uint8(avastar.generation)][avastar.serial];
+```
+
+However, the following line [L168](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarTeleporter.sol#L168) only updates the struct in memory and does not register the change in storage.
+
+```solidity
+prime.replicated[i] = true;
+```
+
+Any changes to `prime.replicated` only occurred in memory and are reversed at the end of the function's execution. The impact of this issue is that the same traits can be used multiple times to mint Replicants. Since the maximum Replicant supply is not directly enforced, this will allow an arbitrarily large number of tokens to be minted.
+
+##### Status
+
+Successfully patched by the Avastars team in [Pull Request #1](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L134). This issue was fixed by replacing the previous struct memory copy with a storage reference.
+
+### H02: Prime Supply Can Exceed the Defined Supply Limit
+
+##### Description
+
+This function `mintPrime()` relies on the mapping `countByGenerationAndSeries` to monitor the active token supply during the minting process. This value is supposed to verify whether the supply of Primes or Promos is bellow maximum allowable number of tokens. Every potential new token validated against a constant, either `MAX_PROMO_PRIMES_PER_GENERATION` or `MAX_PRIMES_PER_SERIES`, to ensure this supply cap is maintained. This happens on [L154-L158](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L154-158) in the PrimeFactory contract.
+
+```solidity
+if (_series == Series.PROMO) {
+    require(
+        countByGenerationAndSeries[uint8(_generation)][uint8(_series)]
+        <
+        MAX_PROMO_PRIMES_PER_GENERATION
+    );
+} else {
+    require(
+        countByGenerationAndSeries[uint8(_generation)][uint8(_series)]
+        <
+        MAX_PRIMES_PER_SERIES
+    );
+}
+```
+
+If these checks pass, an internal ledger tracking the supply by generation and series is incremented on [L170](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L170).
+
+```solidity
+countByGenerationAndSeries[uint8(_generation)][uint8(_series)].add(1);
+```
+
+However, this code does not successfully increase the value in storage. The variable remains 0 when the function finishes execution.
+
+The potential implications of this issue are quite serious. The validation always passes regardless of how many Primes or Promos are minted. This allows the token supplies to surpass their hardcoded limits and break the rarity guarantees promised by the application.
+
+##### Recommendation
+
+`countByGenerationAndSeries` returns a value which needs to be stored. Either of the following solutions will correctly patch the issue.
+
+```solidity
+// #1
+countByGenerationAndSeries[uint8(_generation)][uint8(_series)] =
+  uint16(countByGenerationAndSeries[uint8(_generation)][uint8(_series)].add(1));
+
+// #2
+countByGenerationAndSeries[uint8(_generation)][uint8(_series)]++;
+```
+
+In addition, I recommend increasing the unit test coverage of PrimeFactory to explicitly validate that the maximum supply invariants are not broken. A test checking that the supply count correctly increments is also recommended. `countByGenerationAndSeries` can also be included in the `NewPrime()` event to track more easily.
+
+##### Status
+
+[Successfully patched](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/PrimeFactory.sol#L173) with the 2nd recommendation.
+
+### H03: Unauthorized Access to Prime Array With Replicant Tokens and Vice Versa
+
+##### Status
+
+_note fix these pop out boxes and integrated different dated notes into single narrative..._
+
+> 05/02/20
+>
+> Addressed in 3 out of 4 functions. Not addressed in `approveTraitAccess()` where it is still possible to approve handlers for Replicants trait access. As this is the only function that modifies storage, I recommend adding a check for `Avastar.wave == Wave.PRIME`.
+
+##### Location
+
+`approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) AvastarTeleporter, `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102) and `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory, and `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory.
+
+##### Description
+
+These four functions are vulnerable to a subtle bug that enables unauthorized data access. While no immediate consequences have been uncovered, this issue comes very close to unlocking potentially severe issues such as unauthorized access to write (or overwrite) to storage.
+
+The issue depends on Primes and Replicants sharing a common Avastar data structure, while also maintaining independent siloed state. If there are more Primes than Replicants in a given Generation, or vice versa, it is possible for a malicious actor to gain unauthorized access to the array of one wave using a token id of the other wave.
+
+For example, consider a scenario in which there are 5000 Primes and 3000 Replicants in `Generation.ONE`. The total Avastar count is 8000. A malicious user owns a Prime with a `tokenId` of #1500 and a `serial` of #1000. This user calls `getReplicantByTokenId(1500)` with their Prime. The only explicit check in easily passes.
+
+```solidity
+require(_tokenId avastars.length);
+```
+
+The Avastar struct is loaded in memory and its generation and serial are used to access the Replicant struct. Even though this token is aPrime, if its values are in range of any Replicant, regardless of owner, it can gain unauthorized access to this data structure.
+
+Potential damage from accessing a view function in this manner is likely negligible, however, some functions use a similar pattern to make state changes. Consider a scenario with more Replicants in a Generation than Primes. `approveTraitAccess()` does not verify if the `tokenId` is a Prime or Replicant. Owners can store approvals for access to a Replicant's nonexistent `replicated` array. Out-of-bounds array access can have serious consequences, including write access to any storage value anywhere in the contract, even outside of the array.
+
+Fortunately `useTraits()` prevents Replicants from using their traits with
+
+```solidity
+require(avastar.wave == Wave.PRIME);
+```
+
+While satisfactory at the moment, this single line feels fragile as protection against a potentially serious issue. For example, an uninitialized Avastar defaults to `Wave == 0` (PRIME). If a malicious user is able to bypass this type of check and continue in the function, another user's `Prime.replicated` array could be accessed, altered, and/or overwritten.
+
+`getPrimeReplicationByTokenId()` also allows an imposter Replicant token to load another Prime's `replicated` array in memory. `getPrimeByTokenId()` and `getReplicantByTokenId()` are called externally by the AvastarMetadata contract, but successfully validated by wave. They are not validated if called directly in the AvastarTeleporter contract.
+
+### Recommendations
+
+- Validate the correct wave of the token entered in all four functions
+  - Add `require(avastar.wave == Wave.PRIME)` after the Avastar struct is loaded in `getPrimeByTokenId()` and `getPrimeReplicationByTokenId()`
+  - Initialize the Avastar struct and perform the same check before the loop begins `approveTraitAccess()`
+  - Add `require(avastar.wave == Wave.REPLICANT)` to `getReplicantByTokenId()`
+- Considering adding an uninitialized value to the Wave enum (similar to Gender) to reduce to risk of erroneous validation of uninitialized tokens as `Wave.PRIME`
+- Add an additional sanity check whenever `avastar.serial` is used to authenticate a state modifying function. For example, add `require (prime.id == avastar.id)` before the loop in `useTraits()`
+
+### H04: Unchecked Return Call Could Lead to Incorrect Debiting of User Balances
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged a with request for clarification about the risk level and reproducible threat examples. New unit tests were added to check for failing conditions.
+
+After further analysis I believe that the risk level in this function is low. The trusted set up between the two contracts eliminates some risk of not validating the return values of an external call. I was not able to identify a case in which `mintPrime()` failed without bubbling up to `purchasePrime()`. I was not able to reproduce a case in which `purchasePrime()` failed without reverting the execution of `mintPrime()`.
+
+I was able to reproduce a (highly contrived) edge case in which `purchasePrime()` receives a longer than expected return value and incorrectly parses the result, leading to incorrect data being logged for `tokenId` and `serial`. The likelihood of this case occurring increases if the AvastarTeleporter contract is untrusted or modifies the behaviour of `mintPrimes()`.
+
+Consider the example of a modified `mintPrime()` function that returns 128 bytes of garbage data. `purchasePrime()` accepts this data without generating an error or stopping execution, despite being longer than the expected 64 bytes. It still parses the first and second 32 byte words as `uint256` regardless of the original data type.
+
+```solidity
+// EXAMPLE
+// this function has the same 4 byte signature as the real `mintPrime()` but returns garbage data for illustrative purposes
+
+function mintPrime(address, uint256, uint8, uint8, uint8, uint8)
+	external
+	pure
+	returns(bytes memory)
+{
+	// assembly used to return 128 bytes of data without prepending length and location values
+	assembly {
+		// begin at free memory pointer
+		let start := mload(0x40)
+		// start position of fourth memory slot
+		let offset := 0x80
+		// 0xffff...ffff
+		let junk := sub(0, 1)
+
+		// loop start condition
+		for { let i := 0 }
+		// loop end condition
+		lt(i, offset)
+		// increment memory position by one slot for each iteration
+		{ i := add(i, 0x20) } {
+			// main loop logic
+			// store junk at current memory slot
+			mstore(add(start, i), junk)
+		}
+		// return 128 bytes of junk from memory
+		return (start, offset)
+	}
+}
+```
+
+<img src={return_data} width="1200" alt="return_data" />
+
+> 05/02/20
+
+There have also been changes to the input validations in these functions which alters the set of possible outcomes. `mintPrime()` and `mintReplicant()` can now successfully mint a token with a Gender of `ANY`. A minter level account can do this by accident or maliciously. If such a token is minted, its metadata will display as female based on the ternary operation on L261 and L289 of AvastarMetadata.
+
+```solidity
+metadata = strConcat(metadata, (gender == Gender.MALE) ? ' Male ' : ' Female ');
+```
+
+`mintReplicant()` also removes a check that the owner is not `address(0)`. However, this is validated again in the ERC-721 `_mint()`. This redundancy allows the function to revert as expected when `address(0)` is passed as the token owner.
+
+##### Location
+
+L217, `purchasePrime()`, AvastarPrimeMinter.
+
+##### Description
+
+User-driven token minting of Primes is initialized in the AvastarPrimeMinter contract. A user deposits enough ether to cover the price of the token they wish to purchase (validated off-chain). A worker address with minter permissions they calls `purchasePrime()` on behalf of the user, passing the token information. The user's balance is debited and the call is forwarded to the AvastarTeleporter contract to mint the token.
+
+```solidity
+(tokenId, serial) = teleporterContract.mintPrime(
+  _purchaser,
+  _traits,
+  currentGeneration,
+  currentSeries,
+  _gender,
+  _ranking
+);
+```
+
+The best practice of the "Check-Effects-Interaction Pattern" would guide that this call should be explicitly validated. If it fails for any reason, the `purchasePrime()` function should reverse the changes to the user and global ether balances.
+
+As presently written, this function returns two expected `uint256` values from the Teleporter contract. Under certain circumstances, however, it is possible for the external sub-call to fail or return unexpected values without the main transaction reverting. In such a case, the user's ether balance, the ether balance available to the owner to withdraw, and the received serial and tokenId values can all be erroneously changed in the contract's storage.
+
+For example, if the Teleporter returns data of an incorrect length or type, PrimeMinter attempt to convert this into two `uint256` values and still considers the transaction a success.
+
+##### Recommendation
+
+There are several options to validate the return value of this call. The first involves using using the lower-level call version, which exposes access to two return values. A `bool` indicates whether the call succeeded and a `bytes memory` value returns any data from the function being called. The later can be explicitly checked for the expected length of two `uint256` return values.
+
+> 05/02/20
+> This section of code replaces an under-explained example. The logic of the function is:
+
+- perform the same validations as the original function
+- perform the same balance accounting as the original function
+- calculate the 4 byte function signature and pack the arguments into the correct `calldata` format using `abi.encodeWithSignature()`
+- Explicitly check the success and return data length of the call. It should be 64 bytes long
+- Revert if either condition fails
+- Parse the data with `abi.decode()`
+- Emit same event as original function
+- Return `traitId` and `serial` as expected. Because they are named return variables they do not need to be explicitly returned in the function body with `return (traitId, serial)`
+- Note: the function signature of `0xc8c4a80a` will change if the parameter types or name of `mintPrime()` change
+- Note: it is possible to craft a colliding signature for an arbitrary function with a different name
+- Note: return values do not affect the function signature
+- Note: `enum` types are encoded as the smallest `uint` type that can fit all their possible values (`uint8` in this case)
+- The resulting `calldata` constructed by this function and sent to AvastarTeleporter is exactly the same as: `"teleporterContract.mintPrime(_purchaser, _traits, currentGeneration, currentSeries, _gender, _ranking)"`
+
+```solidity
+function purchasePrime(
+  address _purchaser,
+  uint256 _price,
+  uint256 _traits,
+  Gender _gender,
+  uint8 _ranking
+)
+  external
+  onlyMinter
+  whenNotPaused
+  returns(uint256 tokenId, uint256 serial)
+{
+  require(_purchaser != address(0));
+  require (depositsByAddress[_purchaser] >= _price);
+  require(_gender > Gender.ANY);
+
+  depositsByAddress[_purchaser] = depositsByAddress[_purchaser].sub(_price);
+  unspentDeposits = unspentDeposits.sub(_price);
+
+  // structure a low-level call and capture the raw return data
+  (bool success, bytes memory data) = address(teleporterContract).call(
+	  abi.encodeWithSignature(
+      "mintPrime(address,uint256,uint8,uint8,uint8,uint8)",
+      _purchaser,
+      _traits,
+      currentGeneration,
+      currentSeries,
+      _gender,
+      _ranking
+	  )
+  );
+
+	// was the external call successful?
+  require(success);
+  // is the return data exactly the length of two `uint256` values?
+  require(data.length == 0x40);
+
+  // if so, parse as expected and return the values
+  (tokenId, serial) = abi.decode(data, (uint256, uint256));
+
+  emit DepositorBalance(_purchaser, depositsByAddress[_purchaser]);
+}
+```
+
+Returned calldata:
+
+<br/>
+<img src={calldata} width="1200" alt="calldata" />
+<br/>
+
+Another option for increasing the certainty that the returned data is correct is by through relating the two values `require(tokenId >= serial)`.
+
+Finally, consider if AvastarPrimeMinter needs the return values at all. They are only used in an event that largely duplicates a similar event emitted in AvastarTeleporter.
+
+## Medium Severity
+
+### M01: Denial of Service and Griefing During Minting
+
+##### Status
+
+01/28/20
+
+This issue is partially mitigated by the Avastars team's plan to run multiple `minters`.This issue was originally reported in the 12/01/20 Preliminary Assessment.
+
+##### Location
+
+`deposit()` and `withdrawDepositorBalance()` in AvastarPrimeMinter.
+
+##### Description
+
+The unique payment system opens up a potential griefing vector during minting. It's possible for a malicious user to continuously deposit funds as if they wanted to purchase an Avastar, wait for the minter to send a transaction, then front-run this transaction and withdraw their funds. This would cause the purchase transaction from the minter to fail and could slow service for anyone buying tokens, depending on how many active minter addresses there are. While the malicious actor does not gain anything directly from this type of attack, it does have the potential to slow or halt operation.
+
+Another variation of this DoS vector not discussed in the previous report involves griefing the minter system with small dust deposits from different addresses. While the system could likely adapt quickly, a motivated attacker could flood any event monitoring system with a stream of 1 Wei deposits from new accounts. Since there is no price information in the contracts, this would be difficult to distinguish from legitimate user without syncing with the backend system. Reliance on external validation of data is a potential weak point in the decentralization of the application.
+
+##### Recommendation 1
+
+The first general strategy maintains the existing deposit and withdraw system. It focuses on making the minters resilient to changing conditions.
+
+The `minters` should:
+
+- Detect and validate incoming user transactions
+- Match these deposits with price and trait information from the backend
+- Track gas prices, confirmation times, and network conditions
+- Replace the nonces of any stuck transactions
+- React to user withdraws and adjust transactions accordingly
+- Maintain a clear priority queue for deposits in the event of multiple users attempting to claim the same hash
+- Balance ether available for gas between the minters
+- Maintain reliable access to the Ethereum network with redundancy in the node infrastructure
+
+Risks:
+
+- Key loss / account compromise
+- Downtime / node and server overhead
+- Trust model that requires the users have faith in a closed system
+
+##### Recommendation 2
+
+An alternative model involves users committing some information on-chain along with their deposit. This could be a signature or hashed value of the token traits. To prevent withdrawal griefing, users could be require to commit to some minimum deposit period. If the transaction is not completed by the minter callback in a reasonable time frame, their ability to withdraw is unlocked.
+
+### M02: Admin Overwrite Permissions
+
+##### Status
+
+    > 01/28/20
+    > The Avastars team has removed the direct ability to overwrite storage. They have also added an `onlyBeforeProd()`modifier that provides users with greater assurances that their token's data will not change after minting in that generation and series has begun.This issue was originally reported in the 12/01/20 Preliminary Assessment.
+
+##### Location
+
+`extendTraitArt()` and `setAttribution()` in TraitFactory. `setTokenUriBase()`, `setMediaUriBase()` and `setViewUriBase()` in AvastarMetadata. `setMetadataContractAddress()` in AvastarTeleporter. `setTeleporterContract()` in AvastarPrimeMinter.
+
+##### Description
+
+There are still some areas where it is possible for token data to be corrupted or omitted, by accident or by a compromised admin account. These include:
+
+- In `setTeleporterContract()`, the address can be changed at any time by the `sysAdmin` account. Users may have deposited funds that are sent to a new contract. The `whenPaused()` modifier provides limited assurances as it can be toggled at any time, even in the same transaction
+- Similarly, `setMetadataContractAddress()` can be changed at any time, potentially breaking the direct link to the artwork and metadata
+- Generation and Series can be changed at any time and do not need to follow any logical order
+- Traits cannot be updated after a generation begins, but they can be prevented from being added. One accidental or malicious minting per generation can render the entire contract moot if the traits have not been completely added
+- `setTokenUriBase()`, `setMediaUriBase()`,`setViewUriBase()` can be altered at will or improperly initialized with empty strings
+
+While this does not pose an explicit security risk as long as the admins remain trustworthy, it does undermine the minimized trust model that many NFT owners expect. Furthermore, unchecked admin powers present an ongoing threat if their keys are ever compromised.
+
+### M03 Irreversible Permissions and Other Access Control Issues
+
+##### Status
+
+> 05/02/20
+>
+> Mostly addressed. `owners` can now remove permissioned roles from other accounts with the `stripRoles()` function in AccessControl. It provides greater control over the `minters`. However, `admins` have effective access to the same privileges as `owners` since they are able to grant themselves new roles. The following edge cases are possible if the application's trust model breaks down.
+
+- Nothing in the contracts enforces that any `owners` ever get added
+- Nothing in the contracts enforces that `owners` also receive `admins` privileges, though this was stated as the expected condition
+- if a `sysAdmin` or owner address is compromised they can strip any honest `owners` and `admins` of their roles
+- if the only remaining owner is stripped of, or never receives, `admins` permissions they are not able to pause or update the contract or grant new roles
+- it is possible to remove all of the `admins` and permanently lock the ability to add new roles
+
+##### Location
+
+AccessControl
+
+##### Description
+
+The current implementation of the AccessControl contract does not include methods for removing privileged accounts. This poses several potential risks.
+
+The AvastarPrimeMinter (and presumably AvastarReplicantMinter) contracts must have minter permissions in the AvastarTeleporter contract to successfully forward user purchases. A smart contract with elevated permissions and access to the interface methods of the Teleporter contract presents a wider attack surface. Hijacking the Minter's execution context to make a permission call as `msg.sender` is one example. Minter contracts can be `paused` or `upgraded` but minter status cannot be revoked.
+
+Potential network congestion during the minting process will most likely necessitate multiple agents with minter permissions, potentially a large number. Segregating access to each role allows for more secure private key management of the different accounts. The `sysAdmin` key management should aspire to the highest level of security that can be reliably managed by the team.
+
+##### Recommendation
+
+- Adding a `removeMinter()` function allows this account to spin up and tear down `minters` as needed, while minimizing the risk of a lost or compromised key
+- The AvastarPrimeMinter contract should ensure that an address is assigned the owner role in the contract's constructor. The comments above the constructor in the the AccessControl contract create the impression that the deploying address is an owner of the contract. However, this address is not assigned the owner level permissions:
+
+```solidity
+@notice Sets `msg.sender` as owner and system admin by default.
+```
+
+### M04: Unchecked Array Length Creates uint8 Overflow in for Loop
+
+##### Status
+
+> 05/02/20
+>
+> Fixed by checking the length of the array used as input in `approveTraitAccess().`
+
+##### Location
+
+L101, AvastarTeleporter, `approveTraitAccess()`.
+
+##### Description
+
+This function accepts a dynamically sized array: `uint256[] calldata _primeIds`. The array length is not validated and is used to define the upper limit of iterations in a for loop.
+
+```solidity
+for (uint8 i = 0; i < _primeIds.length; i++) {...}
+```
+
+The starting variable `i` is a `uint8` type and will overflow to 0 when its value increments beyond 255. The caller can force this overflow by calling the function with more than 255 items in the `_primeIds` array.
+
+The function checks if the caller owns the tokens listed. However, it does not check for duplicate values. A malicious caller only needs to own 1 token and can pass the same id for any number of item in the array payload. There are no immediate consequence of this overflow.
+
+##### Recommendations
+
+- Do not allow dynamic arrays as input in an open function. When an array must be used, define a sensible fixed length. For example: `uint256[8] calldata _primeIds`
+- Favour explicit validation of inputs and results rather than relying on integer type lengths to define the range of acceptable values. The later may fail silently or be unintentionally removed or modified in future versions of the code base
+- Do not allow a parameter that a user can control to dictate the bounds of a loop or similar operation
+- The event `TraitAccessApproved(_handler, _primeIds)` should also validate sensible limits before accepting an array
+
+### M05 Dynamic Array Used for Fixed Length Property
+
+##### Status
+
+> 05/02/20
+>
+> Mostly addressed. The array is now initialized as fixed length `bool[12]` array. Access to this array is explicitly validated. Changing to a non-array data type or expanding the functionality to take advantage of index-specific access is outside of the scope for the development of this feature.
+
+##### Location
+
+L77 in AvastarTypes and L166 in PrimeFactory.
+
+##### Description
+
+The Prime struct is defined as a dynamic array of bool values used to track the state of the token's traits in `bool[] replicated`.
+
+```solidity
+primesByGeneration[uint8(_generation)].push(
+	Prime(
+    tokenId,
+    serial,
+    _traits,
+    new bool[](32),
+    _generation,
+    _series,
+    _gender,
+    ranking
+  )
+);
+```
+
+The syntax above creates a new array initialized with 32 null items. Since this is a dynamic array its length can potentially mutate to greater or less than 32. Explicit length validation is recommended to ensure the type safety of this array. For example, `useTraits()` also accepts a risky unbounded array of `bool[] calldata _traitFlags`.
+
+##### Recommendation
+
+- Use `bool[32] calldata _traitFlags` to explicitly limit the array to its intended length
+- Consider offering a function that allows for the use of a single trait accessed by index so that the entire array does not need to be looped through with every use
+- Consider using a fixed length data type to track replicated traits. Flip a bit when the flag is set
+
+### M06: Unchecked Minter Privileges Require Extensive User Trust During Purchases
+
+##### Status
+
+> 05/02/20
+>
+> The team understands that the application has been designed with a model that require a degree of trust. Risk from compromised minter accounts is mitigated to some degree with the addition of the `stripRoles()` function.
+
+##### Description
+
+A core design choice in the project involves extensive permissions for privileged accounts. This allows the project team to reduce their exposure to some risks on a live network and maintain a higher degree of control over the operation of the application. The generation of traits, genes, and other attributes is centralized and off-chain.
+
+Avastars is unable to offer users any assurances when they deposit their funds in the smart contact to buy a token.
+
+The minter role can mint new tokens for no cost and assign them to any address. This role can also can mint arbitrary tokens and charge users any amount up to the maximum deposited. This effectively means that any user funds deposited into the contract can be stolen by compromised accounts or malicious administrators. Furthermore, the minter role can selectively refuse service to users or process orders out of sequence. Users have no recourse in any of these cases. Their trust is required.
+
+### M07: Contract Does Not Enforce Supply Limit for Replicants
+
+##### Status
+
+> 05/02/20
+>
+> Addressed with unnecessary code duplication. The issue was patched by adding the constant `MAX_REPLICANTS_PER_GENERATION`, which defines the maximum token supply per generation. A new mapping `replicantCountByGeneration` was added to count the number of Replicants minted per Generation. This mapping duplicates an existing mapping called `replicantsByGeneration`, which stores the same information as the length of an array rather than an incremented counter.
+
+##### Description
+
+The contracts do not enforce a cap on the Replicant supply. As presently designed the minter can create an unlimited supply of Replicants without the need to use traits from the Primes or respect the constants the Prime supply are bound to.
+
+### M08 Open Access to Uninitialized Storage Pointers
+
+##### Status
+
+> 05/02/20
+>
+> Mitigated with a check that prevents the function from continuing execution if `attributionByGeneration` is not set. The act of checking whether or not it set still accesses an uninitialized storage pointer. However, the risk of unauthorized access or corruption of other storage values is minimal.
+
+Rather than incrementing storage keys from 0 like other state variables, mappings use a hash function to generate the starting position of their storage slot(s). These locations are deterministic but distributed over a 2\*\*256-1 search space. This keeps them far away from the 0 indexed storage keys used by static types. The chance of discovering a collision is essentially 0. If `attributionByGeneration` needs to store string values longer than 32 bytes, the next storage location is generated from a (deterministic) hash. See the [Solidity Docs](https://solidity.readthedocs.io/en/latest/miscellaneous.html#mappings-and-dynamic-arrays) for more information.
+
+##### Location
+
+L138, Trait Factory, `getAttributionByGeneration()`.
+
+##### Description
+
+If `getAttributionByGeneration()` is called with an unset but valid Generation as an argument, it allows access to an uninitialized storage pointer.
+
+```solidity
+Attribution memory attrib = attributionByGeneration[uint8(_generation)];
+```
+
+This mapping attempts to reference an Attribution struct that does not yet exist. Access to uninitialized storage can have dangerous and unpredictable effects, including jumps to arbitrary pieces of code.
+
+### Recommendations
+
+- Create a separate flag not stored in the struct that is toggled on when the `setAttribution()` function is called
+- Add an explicit check for data saved at a given Attribution mapping before allowing access to that storage location
+
+## Low Severity
+
+### L01: Out of Bounds Enum Inputs Can Trigger Invalid Opcode
+
+##### Status
+
+> 01/28/20
+> The Avastars team has decided that the impact of this issue does not necessitate the substantial refactoring required. This issue was originally reported in the 12/01/20 Preliminary Assessment.
+
+##### Location
+
+Every function that accepts an enum as input, including:
+
+- `getTraitIdByGenerationGeneAndVariation()`, `getAttributionByGeneration()`, `setAttribution()` and `createTrait()` in TraitFactory
+- `getPrimeByGenerationAndSerial()` and `mintPrime()` in PrimeFactory
+- `getReplicantByGenerationAndSerial()` and `mintReplicant()` in ReplicantFactory
+- `setCurrentGeneration()`, `setCurrentSeries()` and `purchasePrime()` in AvastarPrimeMinter
+- `assembleTraitMetadata()` in AvastarMetadata
+
+##### Description
+
+When used as a function argument, an out-of-range value of an enum type triggers an `INVALID` opcode. This is an assert-style exception that burns all of the gas in the transactions. In general, this type of exception should never happen in production code. The `REVERT` opcode provides the same assurances with an additional error message. And without burning all the gas in a transaction.
+
+##### Recommendation
+
+I still recommend adding explicit validation for any input with an enum type in non-admin functions. While not worth refactoring the full code base, heavy use of the enum type is likely creating more complexity than it is clarity.
+
+### L02: State Access in Event Emitted After External Call
+
+##### Status
+
+> 05/02/20
+>
+> Addressed. The event no longer accesses mutable state after the external `transfer` call. There remains a very small risk of reentrancy with the post-Istanbul opcode gas pricing. See [OpenZeppelin's recommendations](https://blog.openzeppelin.com/reentrancy-after-istanbul/) on avoiding `transfer` for more information.
+
+##### Location
+
+`withdrawDepositorBalance()` in PrimeMinter.
+
+##### Description
+
+An external `transfer` call is sent to an unknown address before the function accesses state and finishes execution. Accessing state after an untrusted external call brings potential risk for reentrancy, particularly now that `transfer` is able to trigger code execution with the updated storage opcode costs. If the call fails incorrect data might be logged in the event.
+
+##### Recommendation
+
+Emit the local variable `depositorBalance` rather than accessing state with `depositsByAddress[msg.sender]`.
+
+### L03: Trait Hashes Rely on External Validation
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. Centralized external validation is part of the application's trust model.
+
+##### Description
+
+Ensuring that each avastar has a trait hash that corresponds with valid traits happens entirely off-chain. The functions `assembleTraitMetadata()` and `renderAvastar()` have no mechanism for parsing invalid genes other than omitting them. Not all hashes produce valid Avastars. The application relies on an external validation systems and is not enforced at the smart contract level.
+
+### L04: Duplicate Values Possible in Series Array
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. External validation of inputs for permissioned functions is part of the application's trust model.
+
+##### Location
+
+`createTrait()` in TraitFactory.
+
+##### Description
+
+`createTrait()` accepts inputs that can include duplicate values for the Series\[] array. For example:
+
+```solidity
+createTrait(..., [Series.ONE, Series.ONE, Series.ONE], ...);
+```
+
+### L05: traitHandlerByPrimeTokenId Gives a Handler Access to All of a User's Unused Traits
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. This is the intended functionality. Granular control of trait approval is beyond the scope of this feature.
+
+##### Location
+
+`approveTraitAccess()` in AvastarTeleporter.
+
+##### Description
+
+The current design does not allow for a token owner to atomically control approvals or handlers for individual trait in a single token. The `bool` flag system could be extended to allow for granular trait control based on index. There is limited benefit to tracking traits individually if their functionality as atomic units is restricted.
+
+### L06: upgradeContract() Does Not Check for Null Address
+
+##### Status
+
+> 05/02/20
+>
+> Addressed.
+
+##### Location
+
+`upgradeContract()` in AccessControl.
+
+##### Description
+
+It's possible for the `sysAdmin` to accidentally or maliciously set the address of new contract in `upgradeContract()` to `address(0)`.
+
+##### Recommendation
+
+This should be explicitly disallowed.
+
+### L07: isAvastarTeleporter() and isAvastarMetadata() Checks Are Insufficient
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. The risk of a contract maliciously spoofing the return value is reduced by the application's trust model. More robust interface checks are beyond the scope of this version of the contracts.
+
+##### Location
+
+L42, AvastarTeleporter, `isAvastarTeleporter()` and L94, AvastarMetadata, `isAvastarMetadata()`
+
+##### Description
+
+Returning a value as always true provides little assurance that the prospective contract implements the intended functionality. Any contract could add a function by the same name which contained arbitrary logic and still returned true (mitigated somewhat by admin privileges)
+
+##### Recommendation
+
+These contracts could register their interfaces in the ERC-165 registry and perform much more robust interface checks.
+
+### L08: Tightly Packing Traits Struct Will Save Gas
+
+##### Status
+
+> 05/02/20
+>
+> Accepted. The gas cost of `createTrait()` was reduced by approximately 20%.
+
+##### Location
+
+`Trait` struct in AvastarTypes.
+
+##### Description
+
+Reordering the declaration of variables in the Traits struct will reduce the size of every instance of this struct by one full storage slot. This will save gas and reduce the contract size during deployment. It will also reduce the gas costs when the Traits are added.
+
+The struct is initialized as:
+
+```solidity
+struct Trait {
+	uint256 id;                      // slot 1: 32/32 bytes used
+	Generation generation;           // slot 2: 01/32 bytes used
+	Series[] series;                 // slot 3: 32/32 bytes used
+	Gender gender;                   // slot 4: 01/32 bytes used
+	Gene gene;                       // slot 4: 02/32 bytes used
+	Rarity rarity;                   // slot 4: 03/32 bytes used
+	uint8 variation;                 // slot 4: 04/32 bytes used
+	string name;                     // slot 5: 32/32 bytes used
+	string svg;                      // slot 6: 32/32 bytes used
+}
+```
+
+##### Recommendation
+
+By reorganizing the lexical order of declaration, it's possible to tightly pack the variables into one fewer storage slot. This change will reduce the gas cost every time `createTrait()` is called by ~20k.
+
+```solidity
+struct Trait {
+	uint256 id;                      // slot 1: 32/32 bytes used
+	Generation generation;           // slot 2: 01/32 bytes used
+	Gender gender;                   // slot 2: 02/32 bytes used
+	Gene gene;                       // slot 2: 03/32 bytes used
+	Rarity rarity;                   // slot 2: 04/32 bytes used
+	uint8 variation;                 // slot 2: 05/32 bytes used
+	Series[] series;                 // slot 3: 32/32 bytes used
+	string name;                     // slot 4: 32/32 bytes used
+	string svg;                      // slot 5: 32/32 bytes used
+}
+```
+
+<img src={storage_layout} width="1200" alt="storage_layout" />
+
+### L09: setAttribution() Strings Can Be Set to Null
+
+##### Status
+
+> 05/02/20
+>
+> Addressed. This function now checks that the length of the input is greater than 0.
+
+##### Location
+
+L152, TraitFactory, `setAttribution()`.
+
+##### Description
+
+It is possible for a `sysAdmin` to accidentally or maliciously set the attribution of a Generation as an empty string
+
+##### Recommendation
+
+Check that the length of `_artist` and `_infoURI` is > 0.
+
+### L10: TraitAccessApproved() Event Does Not Necessarily Reflect State Changes
+
+##### Status
+
+> 05/02/20
+>
+> Addressed. The function will now only complete execution if there is a state change.
+
+##### Location
+
+L109, AvastarTeleporter, `TraitAccessApproved()`
+
+##### Description
+
+The `approveTraitAccess()` function emits the event `TraitAccessApproved()` regardless if any new traits have been approved or changed handlers. It is possible to provide an empty array of `_primeIds` as an argument for this function. It is also possible to provide a set of `_primeIds` that have already been approved to the given handler. In both cases, the event unnecessarily broadcasts when there are no state modifications.
+
+### L11: Functions With Unnecessarily Permissive Visibility
+
+##### Status
+
+> 05/02/20
+>
+> Addressed. Visibility changed to `external` on all 8 recommended functions.
+
+##### Location
+
+- `getPrimeByTokenId()`, `getPrimeReplicationByTokenId()`, `getReplicantByTokenId()` in PrimeFactory
+- `getPrimeByTokenId()`, `getReplicantByTokenId()` in IAvastarTeleporter
+- `pause()`, `unpause()` in AccessControl
+- `tokenURI()` in AvastarTeleporter
+
+##### Description
+
+These functions are not used internally in a contract and can safely be changed from `public` to `external`.
+
+### L12: Limited Unit Test Coverage of Token Dependencies and Certain Branches of the Core Contracts
+
+##### Status
+
+> 05/02/20
+>
+> Improved. Unit test coverage improved in areas identified in the audit and in general. Improving coverage for other under-tested functionality like token approval and transfer is a goal.
+
+##### Description
+
+See [Test Coverage][#a02-test-coverage] section in the Appendix for more detail.
+
+A significant percentage of the branches in AvastarPrimeMinter, AvastarTeleporter, PrimeFactory, ReplicantFactory, TraitFactory have limited or no unit test coverage. Large parts of the inherited token functionality are not covered by tests. Testing the interactions of the OpenZeppelin and Avastars base contracts may uncover bugs not present in common implementations of the standard ERC-721 contracts.
+
+### L13: Default Truffle Project Settings Targets Outdated Evm Version
+
+##### Status
+
+> 05/02/20
+>
+> Addressed. The core contracts now use solc 0.5.14, which set Istanbul as the default evmVersion. This change is confirmed in the contract build artifacts.
+
+##### Description
+
+By default, the 0.5.12 solc compiler targets the `petersburg` evmVersion. Using the new opcodes and updated gas pricing available in the `istanbul` evmVersion will better replicate current conditions of the main net. The default evmVersion was changed to `istanbul` in solc 0.5.14. (Note: while Berlin is the most recent evmVersion available it is still considered experimental).
+
+### L14: Unnecessary Duplication of Avastar Storage
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. This is a potential optimization and does not pose a security risk.
+
+##### Location
+
+Avastar struct in AvastarTypes.
+
+##### Description
+
+`Avatar.traits` in never exposed as a public variable and is only used once to check if a hash is not repeated in a generation. `isHashUsedByGeneration` is already validated during `mintPrime()` and `mintReplicant()`. Storing and validating the same hash twice is redundant.
+
+### L15: Inconsistent Use of uint Alias
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. This is primarily a style note. The main risk of this item comes from potential human error during development. For example, overlooking an implicit conversion or type casting when a variable is changed or moved.
+
+##### Description
+
+In various parts of the code base variables are declared with the `uint` alias. They should be replaced in favour of explicit types to avoid confusion and unintentional implicit type conversion.
+
+### L16: AvastarReplicantMinter Contract Not Available
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. Not within the scope or timeline of this audit.
+
+##### Description
+
+At the time of the audit the AvastarReplicantMinter contract was not available for review. The interactions of Replicants with the other components of the system may introduce new attack surfaces or create scenarios where benign bugs become security risks.
+
+## Note
+
+### N01: Floating Pragmas
+
+##### Status
+
+> 05/02/20
+> Addressed in all core contracts, which are now locked to solc version 0.5.14. The OpenZeppelin dependencies still use floating pragmas with either ^0.5.0 or ^0.5.5.
+
+##### Location
+
+All contracts.
+
+##### Description
+
+The contracts should specify a fixed pragma version to associate with the development, testing, and auditing of these contracts.
+
+```solidity
+pragma solidity 0.5.12;
+
+//vs
+
+pragma solidity ^0.5.12;
+```
+
+### N02: Unused Library Method With External Call
+
+##### Status
+
+> 05/02/20
+> Acknowledged with a request for further discussion. In general, I do not recommend modifying OpenZeppelin dependencies. However, this particular function is a very recent addition to the library and is not battle-tested like the majority of their code base. There is a very small risk that unexpected behaviour in another part of the contract could jump to and/or trigger the execution of this function. This is purely hypothetical, however, and very unlikely. The potential risk is further reduced by the fact that AvastarTeleporter is not designed to hold ether.
+
+##### Location
+
+OpenZeppelin Address Library.
+
+##### Description
+
+While unlikely to be accessed, I would not include the code for the `sendValue()` function. A bug allowing unexpected `JUMPs` might lead to the execution of the low-level `call.value()` in this function.
+
+### N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged with a request for clarification. This is an informational note about a recently discovered bug related to combining dynamic data types with `abi.encodePacked()`. See [SWC-133](https://swcregistry.io/docs/SWC-133) for more information. The current Avastars code is not at risk. However, it uses a pattern close enough to the vulnerable example that a warning is warranted. There is only a risk if the `strConcat()` function is adapted or extended in future updates and used to generate hashes or perform validations.
+
+##### Location
+
+`strConcat()` in AvastarBase
+
+##### Description
+
+This function uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with a hash, its output can produce collisions.
+
+### N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. This was an informational note about Solidity's recent history with serious bugs and changing behaviour in mixed type exponentiation.
+
+##### Location
+
+L249, TraitFactory, `assembleArtwork()`.
+
+##### Description
+
+Solidity used to have a bug that produced unexpected values when small types were used in exponentiation. The resulting type of an exponentiation of two different sized types is the type of the base. It used to be the smallest type that can hold both the type of the base and the type of the exponent.
+
+### N05: AvastarPrimeMinter Should Set Teleporter Contract in Constructor
+
+##### Status
+
+> 05/02/20
+>
+> Addressed.
+
+##### Description
+
+This would be consistent with how the Teleporter address is set in the Metadata contract.
+
+### N06: Set Short Circuits With Mostly Likely Case First
+
+##### Status
+
+> 05/02/20
+>
+> Addressed.
+>
+> ##### Description
+
+When two conditions are evaluated, position the one that will most frequently fail first to reduce overall gas costs.
+
+```solidity
+if (_series == Series.PROMO) {
+	require(countByGenerationAndSeries[uint8(_generation)][uint8(_series)]
+  <
+  MAX_PROMO_PRIMES_PER_GENERATION);
+} else
+	require(countByGenerationAndSeries[uint8(_generation)][uint8(_series)]
+  <
+  MAX_PRIMES_PER_SERIES);
+}
+```
+
+In this example from `mintPrimes()` the if / else statements could flip.
+
+### N07: State Variable Initialized With Default Value
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. In this example, the redundant declaration of the default value improves the clarity and readability of the code.
+
+##### Description
+
+On L64 of AccessControl a state variable is unnecessarily initialized with its default value (false / 0).
+
+    bool public upgraded = false;
+
+### N08: Test Coverage Treats Invalid Execution States as Passing Conditions
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged as part of L01.
+
+##### Description
+
+This is connected to the Enum validation issue. As a best practice, `Invalid` execution states should not be the intended outcome of a test.
+
+### N09: Event Parameters Are Not Indexed
+
+##### Status
+
+> 05/02/20
+>
+> Auditor error. There are in four events which use the `indexed` keyword. This issue is retracted.
+
+##### Description
+
+No events in the code base take advance of the `indexed` keyword that allows for easier data retrieval from events.
+
+### N10: Empty Events Are Emitted
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. Empty events still offer the ability to subscribe to and filter on-chain activity.
+
+##### Description
+
+`ContractPaused()` and `ContractUnpaused()` in AccessControl are empty. They could contain the address of the caller or other relevant data.
+
+### N11: Unnecessary Casting to Own Type
+
+##### Status
+
+> 05/02/20
+>
+> Partially addressed. The `serial` variables in the 2nd list item were updated. The `uint256(address(this).balance` examples are unchanged.
+
+##### Description
+
+There are several instances of unnecessary type casting:
+
+- `checkFranchiseBalance()` and `withdrawFranchiseBalance()` do not need cast `uint256(address(this).balance)` as it is already of that type
+- `getPrimeByGenerationAndSerial()`, `renderAvastar()`, `getPrimeByTokenId()`, `getPrimeReplicationByTokenId()`, `getReplicantByTokenId()`, `mintAvastar()` all accept a `uint256` value for `serial` and then cast it again as `uint256`
+
+### N12: Unattributed Use of an External Dependency
+
+##### Status
+
+> 05/02/20
+>
+> Addressed.
+
+##### Description
+
+The `uintToStr()` function in AvastarBase is included without attribution. The version used appears to come from Oracalize. An updated version is part of the OpenZeppelin contracts as Strings.sol. Both contracts require reproduction with a license.
+
+### N13: Variable Shadowing
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. While this is primarily an informational note, variable shadowing can produce issues beyond readability or developer error. The primary risk of naming conflicts is unexpected and/or undocumented behaviour in the compiler, particular in contracts with multiple levels of inheritance and nested constructor arguments. See [SWC-119](https://swcregistry.io/docs/SWC-119) and this [Solidity GitHub issue](https://github.com/ethereum/solidity/issues/2563) for more info.
+
+##### Description
+
+The state variables Traits, `name`, `symbol`, and `_name` are shadowed in multiple places in the contract structure.
+
+### N14: External Calls in Loops
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. This item is primarily informational and does not pose a significant security risk. In this case, the number of calls adds significant gas overhead. The following recommendations are meant to clarify the original note and are not realistic to incorporate before the contract goes lives.
+
+Selectively batching calls from AvastarMetadata to AvastarTeleporter can substantially reduce the total number of calls required. For example, the Metadata contract is expected to make _30_ calls to AvastarTeleporter during the normal execution of a single invocation of `getAvastarMetadata()`. While some repetition is necessary, there are at least three opportunities for optimization.
+
+1.  `getAvastarMetadata()` checks that `_uint256 is a valid token` 4 times, each making a separate call to AvastarTeleporter.
+
+- [L220](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L220): `require(_tokenId < teleporterContract.totalSupply(), INVALID_TOKEN_ID)` checks this condition explicitly
+- [L233](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L233) `wave = teleporterContract.getAvastarWaveByTokenId(_tokenId)` checks that the `tokenId` is less than the length of the Avastars array, which is equivalent to `totalSupply()`
+- [L247](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L247): `viewURI(_tokenId)` checks `totalSupply()` again
+- [L279](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L279): `mediaURI(_tokenId)` checks `totalSupply()` again
+
+2.  An [initial call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L233) is made to get `Avastar.wave`. Based on the result, a [separate call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L236-L240) then retrieves either a Prime or Replicant struct. If the Avastar struct stored Series, Gender and `ranking` (only 3 additional bytes combined) all of the necessary information could be returned in one call. These additional values could be tightly packed into unused space in the Avastar struct.
+
+3.  Each of 12 traits in the loop makes 2 external calls.
+
+- [L371](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L371): `traitId = teleporterContract.getTraitIdByGenerationGeneAndVariation(_generation, Gene(slot), uint8(variation))`
+- [L401](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L401) `teleporterContract.getTraitNameById(traitId)`.
+
+AvastarTeleporter could have a single function that returns both the `name` and `traitId`, accessed by generation, gene, and variation.
+
+##### Description
+
+`assembleTraitMetadata()` makes an external call in each iteration of a for loop.
+
+### N15: Unnecessary Validation
+
+##### Status
+
+> 05/02/20
+>
+> Mostly addressed. `require(msg.sender != address(0))` has been [removed](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/298e38ad4c169b0fa1142fec5938c90450cc402b#diff-b7b364011b2d057b016161e4d21a0a98). Some of the duplicated validation between `purchasePrime()` and `mintPrime()` has been removed. There is still an opportunity to funnel all minting through the PrimeMinter, even the promos. This would eliminate the need for duplicating code in both contracts.
+
+##### Description
+
+```solidity
+require(msg.sender != address(0));
+```
+
+Is unnecessary as `msg.sender` can never be 0. This is present in AvastarPrimeMinter [L152](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L152), [L164](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L164), [L176](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L176)
+
+- Validating the same inputs in both `purchasePrime()` and `mintPrime()` is redundant. Consider making all new mint calls flow through a single path to reduce the overhead of revalidation
+
+### N16: Redundant and/or Duplicated Code
+
+##### Status
+
+> 05/02/20
+>
+> Addressed in some cases. This is a very minor optimization that could be implemented in functions throughout the code base.
+
+##### Description
+
+- `metadataContractAddress` on [L37](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L37) can be declared public and automatically produce a getter function. This would remove the need for the redundant `getMetadataContractAddress()` on [L71-L75](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L71-L75) function
+- Many functions repeatedly downcast inputs rather than storing them as local memory variables. If this type of type conversion is needed more than once during execution it can be stored locally. Repeating the down-casting adds gas for each repetition and reduces code readability
+
+### N17: Benign Reentrancy in safeTransferFrom()
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. The risks of modifying dependencies and/or breaking established standards are likely greater than the risk from this hypothetical edge case.
+
+##### Description
+
+It's possible for the external call in the `safeTransferFrom()` on [L334](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol#L334) ERC-721 interface check to trigger reentrancy in a specific edge case. This requires that malicious craft a function signature collision with `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`. The signature of this function is `0x150b7a02`. An example of a valid colliding signature is `bytes4(keccak256("$$$_10284c80_$$$()"))`. If a contract with the later function is called with 0 ether value, it executes as a direct method `CALL` and can pass an arbitrary amount of gas. It does not execute as a `STATICCALL`. If this malicious function returns `0x150b7a02` at the end of execution it can execute arbitrary logic, including reentrancy in the interim.
+
+### N18: TraitsUsed() Event Emits the Full Array in All Cases
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged. This is expected behaviour as it preserves the correct order of traits provided as input. Accessing or parsing by index is out of scope for the goals of this feature.
+
+##### Description
+
+`useTraits()` requires at least one trait to change states in order for the function to reach the `TraitsUsed()` event. However, this function emits the full `prime.replicated` array without indicating which entries reflect state changes.
+
+I recommend creating a new array in memory and tracking the traits used by index. The event can then emit a smaller set of traits who've states have changed.
+
+### N19: Inconsistencies With Official Solidity Style Recommendations
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged.
+
+##### Description
+
+The style guide recommends limiting line length to 79 or 99 characters. It also recommends indenting modifiers and visibility on long function names. For example:
+
+```solidity
+function extendTraitArt(uint256 _traitId, string calldata _svg)
+    external
+    onlySysAdmin()
+    whenNotPaused()
+    onlyBeforeProd(traits[_traitId].generation)
+{
+    require(_traitId < traits.length);
+    string memory art = strConcat(traits[_traitId].svg, _svg);
+    traits[_traitId].svg = art;
+    emit TraitArtExtended(_traitId);
+}
+```
+
+### N20: Comment Refers to Incorrect Event
+
+##### Status
+
+> 05/02/20
+>
+> [Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L48)
+
+##### Description
+
+A comment on [L48](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarTeleporter.sol#L48) of AvastarTeleporter incorrectly refers to the `TeleporterContractSet()` event being emitted when the function emits the event `MetadataContractAddressSet()`.
+
+### N21: Hard-Coded Limited in for Loop Is Not Future-Proof
+
+##### Status
+
+> 05/02/20
+>
+> Acknowledged.
+
+##### Description
+
+`assembleArtwork()` on [L249](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L249) and `assembleTraitMetadata()` on [L362](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L362) both hardcode the limit to a for loop as `Gene.HAIR_STYLE`. There is nothing indicating that this will always be the last value in the enum. In future versions of the contract it could easily be overlooked during an upgrade.
+
+```solidity
+for (uint8 slot = 0; slot <= uint8(Gene.HAIR_STYLE); slot++){...}
+```
+
+### N22: Unnecessary Inheritance
+
+##### Status
+
+> 05/02/20
+>
+> This is a new informational note and was not previously in the report. There are several cases where entire inherited libraries are unused.
+
+No contract in the AvastarMetadata inheritance structure uses the SafeMath Library. It is inherited in AccessControl on [L13-L14](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol#L13-L14). However, neither AccessControl nor any of the contracts which inherit it use the library
+
+```solidity
+using SafeMath for uint256;
+using SafeMath for uint16;
+```
+
+PrimeMinter uses SafeMath. However, it should declare it at the appropriate point and with the appropriate specificity for its use. A better location for declaring the library is at the start of AvastarPrimeMinter for `uint256` only. Several OpenZeppelin dependencies in AvastarTeleporter reference and use SafeMath. However, none of the core contracts use it. In all cases, the SafeMath declarations can be removed from AccessControl.
+
+## Appendix
+
+### A01: Smart Contracts Reviewed
+
+##### Core Contracts
+
+- [AccessControl.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol)
+- [AvastarBase.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarBase.sol)
+- [AvastarFactory.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarFactory.sol)
+- [AvastarMetadata.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol)
+- [AvastarPrimeMinter.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarPrimeMinter.sol)
+- [AvastarState.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarState.sol)
+- [AvastarTeleporter.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol)
+- [AvastarTypes.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTypes.sol)
+- [IAvastarMetadata.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/IAvastarMetadata.sol)
+- [IAvastarTeleporter.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarBase.solhttps://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/IAvastarTeleporter.sol)
+- [PrimeFactory.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/PrimeFactory.sol)
+- [ReplicantFactory.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/ReplicantFactory.sol)
+- [TraitFactory.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol)
+
+##### OpenZeppelin v2.4.0 Dependencies
+
+- [Roles.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/access/Roles.sol)
+- [Counters.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/drafts/Counters.sol)
+- [Context.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/GSN/Context.sol)
+- [ERC125.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/introspection/ERC165.sol)
+- [IERC165.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/introspection/IERC165.sol)
+- [SafeMath.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/math/SafeMath.sol)
+- [ERC721.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol)
+- [ERC721Metadata.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721Metadata.sol)
+- [ERC721Full.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721Full.sol)
+- [ERC721Enumerable.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721Enumerable.sol)
+- [IERC721.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/IERC721.sol)
+- [IERC721Metadata.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/IERC721Metadata.sol)
+- [IERC721Full.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/IERC721Full.sol)
+- [IERC721Enumerable.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/IERC721Enumerable.sol)
+- [IERC721Receiver.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/IERC721Receiver.sol)
+- [Address.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/utils/Address.sol)
+
+##### Additional Reference Material
+
+- Avastars-Contracts GitHub repo
+- Truffle project files
+- Unit tests
+- Project documentation at [dapp-wizards.github.io](https://dapp-wizards.github.io/Avastars-Contracts)
+- Deployment scripts, utilities, and helper contracts
+- Code comments
+- Discussions with the Avastars team
+
+##### Not Available / Out of Scope
+
+- Off chain hash generation including rng
+- Minting management system
+- Pricing system
+- AvastarsReplicantMinter (in development)
+
+### A02: Test Coverage
+
+note coverage from first report
+
+| File                   | % Statements | % Branches | % Functions | % Lines |
+| :--------------------- | :----------- | :--------- | :---------- | :------ |
+| AccessControl.sol      | 100          | 91.67      | 100         | 100     |
+| AvastarBase.sol        | 100          | 100        | 100         | 100     |
+| AvastarFactory.sol     | 100          | 83.33      | 100         | 100     |
+| AvastarMetadata.sol    | 98.57        | 88         | 100         | 98.43   |
+| AvastarPrimeMinter.sol | 100          | 55         | 100         | 100     |
+| AvastarState.sol       | 100          | 100        | 100         | 100     |
+| AvastarTeleporter.sol  | 100          | 75         | 100         | 100     |
+| AvastarTypes.sol       | 100          | 100        | 100         | 100     |
+| IAvastarMetadata.sol   | 100          | 100        | 100         | 100     |
+| IAvastarTeleporter.sol | 100          | 100        | 100         | 100     |
+| PrimeFactory.sol       | 100          | 59.09      | 100         | 100     |
+| ReplicantFactory.sol   | 100          | 57.14      | 100         | 100     |
+| TraitFactory.sol       | 100          | 63.64      | 100         | 100     |
+| Context.sol            | 0            | 100        | 33.33       | 0       |
+| Roles.sol              | 66.67        | 33.33      | 66.67       | 66.67   |
+| Counters.sol           | 33.33        | 100        | 33.33       | 33.33   |
+| ERC165.sol             | 75           | 50         | 66.67       | 75      |
+| SafeMath.sol           | 36.84        | 16.67      | 37.5        | 36.84   |
+| ERC721.sol             | 19.64        | 8.33       | 19.05       | 19.64   |
+| ERC721Enumerable.sol   | 27.27        | 0          | 41.67       | 25.71   |
+| ERC721Full.sol         | 100          | 100        | 100         | 100     |
+| ERC721Metadata.sol     | 27.27        | 0          | 16.67       | 25      |
+| IERC721.sol            | 100          | 100        | 100         | 100     |
+| IERC721Enumerable.sol  | 100          | 100        | 100         | 100     |
+| IERC721Full.sol        | 100          | 100        | 100         | 100     |
+| IERC721Metadata.sol    | 100          | 100        | 100         | 100     |
+| IERC721Receiver.sol    | 100          | 100        | 100         | 100     |
+| Address.sol            | 0            | 0          | 0           | 0       |
+
+### A03: Inheritance and Dependencies
+
+_\*OpenZeppelin Dependencies_
+
+##### AvastarMetadata
+
+- IAvastarTeleporter
+  - AvastarTypes
+- AvastarBase
+- AccessControl
+  - Roles\*
+  - SafeMath\*
+
+##### AvastarPrimeMinter
+
+- IAvastarTeleporter
+  - AvastarTypes
+- AvastarBase
+- AccessControl
+  - Roles\*
+  - SafeMath\*
+
+##### AvastarTeleporter
+
+- IAvastarMetadata
+- ReplicantFactory
+  - PrimeFactory
+    - AvastarFactory
+      - TraitFactory
+        - AvastarState
+          - AvastarBase
+          - AvastarTypes
+          - AccessControl
+            - Roles\*
+          - ERC721Full\*
+            - ERC721Enumerable\*
+              - IERC721Enumerable\*
+            - ERC721Metadata\*
+              - IERC721Metadata\*
+            - ERC721\*
+              - IERC721Receiver\*
+              - Context\*
+              - ERC165\*
+                - IERC721\*
+                - IERC165\*
+              - Address\*
+              - Counters\*
+              - SafeMath\*
+
+### A04: Risk Rating Model
+
+This audit uses the OWASP risk rating model to evaluate the severity of potential issues based on their likelihood of occurring and their potential impact.
+
+<img src={risk_model} width="1200" alt="risk_model" />
+
+##### Critical
+
+Directly exploitable security threats that should be fixed immediately. Examples include:
+
+- Theft or permanent freezing of ether or ERC-721 tokens
+- Unauthorized minting of ERC-721 tokens
+
+##### High
+
+Serious issues that may be indirectly exportable or exploitable under specific circumstances. These issues should be addressed.
+
+- Limited or situational theft or freezing of funds or tokens
+- Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with a significant impact on funds or tokens
+- Denial of service or other significant disruptions to normal operation
+
+##### Medium
+
+These issues have a reduced impact on security
+
+- Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with moderate or indirect impact on security
+- Potentially dangerous privileges and permissions
+- Higher-impact issues exploitable only under specific edge case conditions
+
+##### Low
+
+- Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with limited or no impact
+- Deviations from smart contract or Solidity best practices
+- Unused or redundant code
+
+##### Note
+
+- Minor recommendations with no direct security implementations, including gas optimizations and style notes
+
+### A05: Version History
+
+| Date     | Description                                 | Version | Commit                                                                                                        |
+| :------- | :------------------------------------------ | :------ | :------------------------------------------------------------------------------------------------------------ |
+| 05/03/20 | Avastars Smart Contract Audit Public Report | 0.3.0   | N/A                                                                                                           |
+| 05/02/20 | Post-Audit Follow Up Report                 | 0.2.0   | [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842) |
+| 28/01/20 | Avastars Smart Contract Audit Full Report   | 0.1.0   | [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea) |
+| 12/01/20 | Preliminary Assessment                      | N/A     | [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) |
+| 09/15/19 | On-Chain Storage Cost Feasibility Report    | N/A     | N/A                                                                                                           |
+
+### A06: Onchain Storage Cost Recommendations
+
+@note update to make sense in context of current report...
+
+Key points:
+
+1. Storing unoptimized full svg data, especially with xml tags, is expensive.In some cases, complex images may even exceed the Ethereum block limit.
+2. Optimized code run through svgo reduces this cost by ~30%.
+3. Tightly packed and pruned storage of the values only reduces the base cost
+   by ~85%.
+4. In general, the source svgs often contain redundant data, blank attributes, unnecessary complexity (polylines, patterns, etc), and use design techniques that exponentially increase the storage footprint (clipping masks)
+5. It is possible to store critical values in tightly-packed structs or other efficient data structures. Repeated values can be stored as constants. The original image can still be reconstructed completely without losing information. The tradeoff is increased smart contract code and image reconstruction complexity.
+6. In my honest opinion, attempting to store the full xml-tagged svgs, particularly poorly optimized svgs, is just a bad fit for the current capabilities of smart contracts. It's a square peg in a round hole. If the project was just beginning, my advice would be: consider the most restrictive element of the project first and design to those constraints
+7. If having the whole file onchain is truly important, consider alternative optimization software, compression software, and establish strict design processes that produce much smaller code footprints
+8. There may be a point where saving some gas is not worth the cost of redeveloping large sections of code base.
+
+### Disclaimer
+
+This audit incorporates the latest security patterns, best practices, and analysis tools. However, it does not provide a guarantee for the security of the code, the absence of future bugs, or the completeness or correctness of its findings. Protocol changes, an adversarial production environment, and the experimental nature of smart contract technology present ongoing risk to the security of the application.
+
+## Table of Contents
+
+- [Introduction](#introduction)
+  - [Objectives](#objectives)
+  - [Scope and Timeline](#scope-and-timeline)
+- [Project Overview](#project-overview)
+  - [Contract Architecture](#contract-architecture)
+  - [Token Design](#token-design)
+  - [Trust Model, Access, and Authority](#trust-model-access-and-authority)
+  - [Documentation, Code Quality, and Testing](#documentation-code-quality-and-testing)
+  - [Security Considerations](#security-considerations)
+- [Key Observations](#key-observations)
+  - [Summary of Issues](#summary-of-issues)
+  - [General assessment](#general-assessment)
+- [Critical Severity Issues](#critical-severity)
+- [High Severity Issues](#high-severity)
+  - [H01: Replicated Traits Not Updated in Storage](#h01-replicated-traits-not-updated-in-storage)
+  - [H02: Prime Supply Can Exceed the Defined Supply Limit](#h02-prime-supply-can-exceed-the-defined-supply-limit)
+  - [H03: Unauthorized Access to Prime Array With Replicant Tokens and Vice Versa](#h03-unauthorized-access-to-prime-array-with-replicant-tokens-and-vice-versa)
+  - [H04: Unchecked Return Call Could Lead to Incorrect Debiting of User Balances](#h04-unchecked-return-call-could-lead-to-incorrect-debiting-of-user-balances)
+- [Medium Severity Issues](#medium-severity)
+  - [M01: Denial of Service and Griefing During Minting](#m01-denial-of-service-and-griefing-during-minting)
+  - [M02: Admin Overwrite Permissions](#m02-admin-overwrite-permissions)
+  - [M03: Irreversible Permissions and Other Access Control Issues](#m03-irreversible-permissions-and-other-access-control-issues)
+  - [M04: Unchecked Array Length Creates uint8 Overflow in for Loop](#m04-unchecked-array-length-creates-uint8-overflow-in-for-loop)
+  - [M05: Dynamic Array Used for Fixed Length Property](#m05-dynamic-array-used-for-fixed-length-property)
+  - [M06: Unchecked Minter Privileges Require Extensive User Trust During Purchases](#m06-unchecked-minter-privileges-require-extensive-user-trust-during-purchases)
+  - [M07: Contract Does Not Enforce Supply Limit for Replicants](#m07-contract-does-not-enforce-supply-limit-for-replicants)
+  - [M08: Open Access to Uninitialized Storage Pointers](#m08-open-access-to-uninitialized-storage-pointers)
+- [Low Severity Issues](#low-severity)
+  - [L01: Out of Bounds Enum Inputs Can Trigger Invalid Opcode](#l01-out-of-bounds-enum-inputs-can-trigger-invalid-opcode)
+  - [L02: State Access in Event Emitted After External Call](#l02-state-access-in-event-emitted-after-external-call)
+  - [L03: Trait Hashes Rely on External Validation](#l03-trait-hashes-rely-on-external-validation)
+  - [L04: Duplicate Values Possible in Series Array](#l04-duplicate-values-possible-in-series-array)
+  - [L05: traitHandlerByPrimeTokenId Gives a Handler Access to All of a User's Unused Traits](#l05-traithandlerbyprimetokenid-gives-a-handler-access-to-all-of-a-users-unused-traits)
+  - [L06: upgradeContract() Does Not Check for Null Address](#l06-upgradecontract-does-not-check-for-null-address)
+  - [L07: isAvastarTeleporter() and isAvastarMetadata() Checks Are Insufficient](#l07-isavastarteleporter-and-isavastarmetadata-checks-are-insufficient)
+  - [L08: Tightly Packing Traits Struct Will Save Gas](#l08-tightly-packing-traits-struct-will-save-gas)
+  - [L09: setAttribution() Strings Can Be Set to Null](#l09-setattribution-strings-can-be-set-to-null)
+  - [L10: TraitAccessApproved() Event Does Not Necessarily Reflect State Changes](#l10-traitaccessapproved-event-does-not-necessarily-reflect-state-changes)
+  - [L11: Functions With Unnecessarily Permissive Visibility](#l11-functions-with-unnecessarily-permissive-visibility)
+  - [L12: Limited Unit Test Coverage of Token Dependencies and Certain Branches of the Core Contracts](#l12-limited-unit-test-coverage-of-token-dependencies-and-certain-branches-of-the-core-contracts)
+  - [L13: Default Truffle Project Settings Targets Outdated Evm Version](#l13-default-truffle-project-settings-targets-outdated-evm-version)
+  - [L14: Unnecessary Duplication of Avastar Storage](#l14-unnecessary-duplication-of-avastar-storage)
+  - [L15: Inconsistent Use of uint Alias](#l15-inconsistent-use-of-uint-alias)
+  - [L16: AvastarReplicantMinter Contract Not Available](#l16-avastarreplicantminter-contract-not-available)
+- [Note / Informational Issues](#note)
+  - [N01: Floating Pragmas](#n01-floating-pragmas)
+  - [N02: Unused Library Method With External Call](#n02-unused-library-method-with-external-call)
+  - [N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future](#n03-potentially-unsafe-use-of-abiencodepacked-if-hashed-in-the-future)
+  - [N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types](#n04-assembleartwork-relies-on-exponentiation-of-mixed-uint-types)
+  - [N05: AvastarPrimeMinter Should Set Teleporter Contract in Constructor](#n05-avastarprimeminter-should-set-teleporter-contract-in-constructor)
+  - [N06: Set Short Circuits With Mostly Likely Case First](#n06-set-short-circuits-with-mostly-likely-case-first)
+  - [N07: State Variable Initialized With Default Value](#n07-state-variable-initialized-with-default-value)
+  - [N08: Test Coverage Treats Invalid Execution States as Passing Conditions](#n08-test-coverage-treats-invalid-execution-states-as-passing-conditions)
+  - [N09: Event Parameters Are Not Indexed](#n09-event-parameters-are-not-indexed)
+  - [N10: Empty Events Are Emitted](#n10-empty-events-are-emitted)
+  - [N11: Unnecessary Casting to Own Type](#n11-unnecessary-casting-to-own-type)
+  - [N12: Unattributed Use of an External Dependency](#n12-unattributed-use-of-an-external-dependency)
+  - [N13: Variable Shadowing](#n13-variable-shadowing)
+  - [N14: External Calls in Loops](#n14-external-calls-in-loops)
+  - [N15: Unnecessary Validation](#n15-unnecessary-validation)
+  - [N16: Redundant and/or Duplicated Code](#n16-redundant-andor-duplicated-code)
+  - [N17: Benign Reentrancy in safeTransferFrom()](#n17-benign-reentrancy-in-safetransferfrom)
+  - [N18: TraitsUsed() Event Emits the Full Array in All Cases](#n18-traitsused-event-emits-the-full-array-in-all-cases)
+  - [N19: Inconsistencies With Official Solidity Style Recommendations](#n19-inconsistencies-with-official-solidity-style-recommendations)
+  - [N20: Comment Refers to Incorrect Event](#n20-comment-refers-to-incorrect-event)
+  - [N21: Hard-Coded Limited in for Loop Is Not Future-Proof](#n21-hard-coded-limited-in-for-loop-is-not-future-proof)
+  - [N22: Unnecessary Inheritance](#n22-unnecessary-inheritance)
+- [Appendix](#appendix)
+  - [A01: Smart Contracts Reviewed](#a01-smart-contracts-reviewed)
+  - [A02: Test Coverage](#a02-test-coverage)
+  - [A03: Inheritance and Dependencies](#a03-inheritance-and-dependencies)
+  - [A04: Risk Rating Model](#a04-risk-rating-model)
+  - [A05: Version History](#a05-version-history)
+  - [A06: Onchain Storage Cost Recommendations](#a06-onchain-storage-cost-recommendations)
+  - [A07: Disclaimer](#a07-disclaimer)
+- [Table of Contents](#table-of-contents)
+
+## Misc / Possibly Delete
+
+@note delete if not used...
+
+<img src={placeholder} width="300" alt="placeholder" />
+<img src={token} width="300" alt="token" />
+
+_@note take out dark mode if i can't get svg filters to selectively filter colour properly..._
+
+<svg>
+  <defs>
+    <filter id="id-of-your-filter">
+      <feComponentTransfer in="SourceGraphic" result="A">
+        <feFuncR type="table" tableValues="0 0.7 0 0" />
+        <feFuncG type="table" tableValues="0 0.7 0 0" />
+        <feFuncB type="table" tableValues="0 0.7 0 0" />
+      </feComponentTransfer>
+    </filter>
+  </defs>
+</svg>
