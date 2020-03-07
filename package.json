@@ -7,25 +7,28 @@
   "scripts": {
     "start": "gatsby develop",
     "clean": "gatsby clean",
-    "build": "gatsby build"
+    "build": "gatsby build",
+    "lint": "prettier --write src/*.js src/*.mdx src/**/*.js src/**/*.mdx ./*.js ./*.md ./*.json"
   },
   "dependencies": {
-    "@mdx-js/mdx": "^1.0.19",
+    "@mdx-js/mdx": "^1.5.7",
     "@mdx-js/react": "^1.5.7",
     "@theme-ui/prism": "^0.3.0",
     "@theme-ui/sidenav": "^0.3.1",
-    "gatsby": "^2.6.3",
-    "gatsby-cli": "^2.10.0",
-    "gatsby-plugin-mdx": "^1.0.4",
-    "gatsby-plugin-sharp": "^2.4.5",
+    "gatsby": "^2.19.32",
+    "gatsby-cli": "^2.10.2",
+    "gatsby-plugin-mdx": "^1.0.77",
+    "gatsby-plugin-sharp": "^2.4.7",
     "gatsby-plugin-theme-ui": "^0.3.0",
-    "gatsby-remark-images": "^3.1.44",
-    "gatsby-source-filesystem": "^2.1.48",
-    "gatsby-transformer-remark": "^2.6.53",
+    "gatsby-remark-images": "^3.1.46",
+    "gatsby-source-filesystem": "^2.1.50",
+    "gatsby-transformer-remark": "^2.6.55",
     "prismjs": "^1.19.0",
     "react": "^16.13.0",
-    "react-dom": "^16.8.6",
-    "remark-slug": "^5.1.2",
+    "react-dom": "^16.13.0",
     "theme-ui": "^0.3.1"
+  },
+  "devDependencies": {
+    "prettier": "1.19.1"
   }
 }

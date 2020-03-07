@@ -12,62 +12,61 @@ export default props => {
     setMode(mode === "light" ? "dark" : "light");
   };
 
+  const modeIcon = mode === "light" ? "☽" : "☼";
+
   return (
     <div
       sx={{
-        display: "flex",
-        flexWrap: "wrap"
+        display: "flex"
       }}
     >
-      <aside
-        sx={{
-          flexGrow: 1,
-          flexBasis: "sidebar"
-        }}
-      >
+      <aside>
         <Sidenav
           {...props}
           sx={{
+            fontWeight: "normal",
             mt: 3,
-            ml: 3,
-            width: 150
+            pl: 2,
+            width: 160,
+            a: {
+              fontWeight: 100
+            }
           }}
         >
-          <Links />
-          <a
+          <Links {...props} />
+          <div
             {...props}
             title="dark / light"
             onClick={handleClick}
             role="button"
             aria-hidden="true"
             sx={{
-              border: "solid",
-              borderWidth: "2px",
-              mx: 2,
-              px: 2,
-              mt: 3,
-              textAlign: "center",
+              cursor: "pointer",
+              mt: 5,
+              pt: 2,
+              fontSize: 32,
+              "-webkit-transform": "rotate(45deg)",
+              textAlign: "left",
               "&:hover": {
-                color: "accent"
+                color: "#ffcc66"
               }
             }}
           >
-            dark/light
-          </a>
+            {modeIcon}
+          </div>
         </Sidenav>
       </aside>
       <main
         sx={{
           flexGrow: 99999,
-          flexBasis: 0,
-          minWidth: 320
+          minWidth: 320,
+          px: 2
         }}
       >
         <div
-          className={mode}
           sx={{
             maxWidth: 768,
-            px: 1
+            px: 3
           }}
         >
           {props.children}

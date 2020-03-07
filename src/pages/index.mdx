@@ -27,14 +27,12 @@ v0.3.0<br/>
 
 ---
 
-<br/>
-<br/>
-<br/>
-*note placeholders images...*
-<br/>
-
+<br />
+<br />
+<br />
+\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\*
+<br />
 <img src={generic_contract} width="300" alt="generic_contract" />
-
 <img src={generic_data} width="1200" alt="generic_data" />
 
 ## Introduction
@@ -185,7 +183,7 @@ Based on the initially assessment of the smart contract architecture, the follow
 ### Summary of Issues
 
 <img src={issues_table} width="1200" alt="issues_table" />
-<br/>
+<br />
 
 ### General Assessment
 
@@ -285,120 +283,48 @@ In addition, I recommend increasing the unit test coverage of PrimeFactory to ex
 
 ### H03: Unauthorized Access to Prime Array With Replicant Tokens and Vice Versa
 
-##### Status
-
 _note fix these pop out boxes and integrated different dated notes into single narrative..._
-
-> 05/02/20
->
-> Addressed in 3 out of 4 functions. Not addressed in `approveTraitAccess()` where it is still possible to approve handlers for Replicants trait access. As this is the only function that modifies storage, I recommend adding a check for `Avastar.wave == Wave.PRIME`.
-
-##### Location
-
-`approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) AvastarTeleporter, `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102) and `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory, and `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory.
 
 ##### Description
 
-These four functions are vulnerable to a subtle bug that enables unauthorized data access. While no immediate consequences have been uncovered, this issue comes very close to unlocking potentially severe issues such as unauthorized access to write (or overwrite) to storage.
+`approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) AvastarTeleporter, `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102) and `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory, and `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory are vulnerable to a subtle bug that enables unauthorized data access. While no immediate consequences have been uncovered, this issue comes very close to unlocking severe effects such as unauthorized or unexpected state modifications.
 
-The issue depends on Primes and Replicants sharing a common Avastar data structure, while also maintaining independent siloed state. If there are more Primes than Replicants in a given Generation, or vice versa, it is possible for a malicious actor to gain unauthorized access to the array of one wave using a token id of the other wave.
+While both Primes and Replicants maintain separate data structures (an array of structs), they also share a common Avastar struct stored in a global array. Under certain conditions, it is possible for a malicious actor to gain unauthorized access to the array of the other type. This is possible if there are more Primes than Replicants in a given Generation, or vice versa,
 
-For example, consider a scenario in which there are 5000 Primes and 3000 Replicants in `Generation.ONE`. The total Avastar count is 8000. A malicious user owns a Prime with a `tokenId` of #1500 and a `serial` of #1000. This user calls `getReplicantByTokenId(1500)` with their Prime. The only explicit check in easily passes.
+Consider a scenario in which there are 5000 Primes and 3000 Replicants in `Generation.ONE`. The total Avastar count is 8000. A malicious user owns a Prime with a `tokenId` of #1500 and a `serial` of #1000. This user calls `getReplicantByTokenId(1500)` with their Prime. The only explicit check in this function easily passes.
 
 ```solidity
 require(_tokenId avastars.length);
 ```
 
-The Avastar struct is loaded in memory and its generation and serial are used to access the Replicant struct. Even though this token is aPrime, if its values are in range of any Replicant, regardless of owner, it can gain unauthorized access to this data structure.
-
-Potential damage from accessing a view function in this manner is likely negligible, however, some functions use a similar pattern to make state changes. Consider a scenario with more Replicants in a Generation than Primes. `approveTraitAccess()` does not verify if the `tokenId` is a Prime or Replicant. Owners can store approvals for access to a Replicant's nonexistent `replicated` array. Out-of-bounds array access can have serious consequences, including write access to any storage value anywhere in the contract, even outside of the array.
-
-Fortunately `useTraits()` prevents Replicants from using their traits with
+The Avastar struct is loaded in memory and its generation and serial are used to access the Replicant struct. Even though this token is a Prime, if its values are in range of any Replicant it can gain unauthorized access to this data structure.
 
 ```solidity
-require(avastar.wave == Wave.PRIME);
+Prime memory prime = primesByGeneration[uint8(avastar.generation)][uint256(avastar.serial)];
 ```
 
-While satisfactory at the moment, this single line feels fragile as protection against a potentially serious issue. For example, an uninitialized Avastar defaults to `Wave == 0` (PRIME). If a malicious user is able to bypass this type of check and continue in the function, another user's `Prime.replicated` array could be accessed, altered, and/or overwritten.
+Some functions use a similar pattern to make state changes. Consider a scenario with more Replicants in a Generation than Primes. `approveTraitAccess()` does not verify if the `tokenId` is a Prime or Replicant. Owners can store approvals for access to a Replicant's nonexistent `replicated` array. Out-of-bounds array access can have serious consequences, including the potential access, write, or overwrite arbitrary storage values. See [this example](https://github.com/Arachnid/uscc/tree/master/submissions-2017/doughoyte) for an extreme case of out-of-bounds array access leaning to arbitrary stroage changes.
 
-`getPrimeReplicationByTokenId()` also allows an imposter Replicant token to load another Prime's `replicated` array in memory. `getPrimeByTokenId()` and `getReplicantByTokenId()` are called externally by the AvastarMetadata contract, but successfully validated by wave. They are not validated if called directly in the AvastarTeleporter contract.
+##### Recommendations
 
-### Recommendations
-
-- Validate the correct wave of the token entered in all four functions
+- Validate the correct wave of the token entered in all four functions:
   - Add `require(avastar.wave == Wave.PRIME)` after the Avastar struct is loaded in `getPrimeByTokenId()` and `getPrimeReplicationByTokenId()`
   - Initialize the Avastar struct and perform the same check before the loop begins `approveTraitAccess()`
   - Add `require(avastar.wave == Wave.REPLICANT)` to `getReplicantByTokenId()`
-- Considering adding an uninitialized value to the Wave enum (similar to Gender) to reduce to risk of erroneous validation of uninitialized tokens as `Wave.PRIME`
+- Considering adding an uninitialized value to the Wave enum (similar to Gender) to reduce to risk of erroneous validation of uninitialized tokens validating as `Wave.PRIME` (0 for both cases)
 - Add an additional sanity check whenever `avastar.serial` is used to authenticate a state modifying function. For example, add `require (prime.id == avastar.id)` before the loop in `useTraits()`
-
-### H04: Unchecked Return Call Could Lead to Incorrect Debiting of User Balances
 
 ##### Status
 
-> 05/02/20
->
-> Acknowledged a with request for clarification about the risk level and reproducible threat examples. New unit tests were added to check for failing conditions.
+Addressed in [getPrimeByTokenId()](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/PrimeFactory.sol#L92), [getPrimeReplicationByTokenId()](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/PrimeFactory.sol#L119), and [getReplicantByTokenId()](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/ReplicantFactory.sol#L82). Not addressed in `approveTraitAccess()` where it is still possible to approve handlers for Replicant trait access. As this is the only function that modifies storage, I recommend adding a check for `require(avastar.wave == Wave.REPLICANT)`.
 
-After further analysis I believe that the risk level in this function is low. The trusted set up between the two contracts eliminates some risk of not validating the return values of an external call. I was not able to identify a case in which `mintPrime()` failed without bubbling up to `purchasePrime()`. I was not able to reproduce a case in which `purchasePrime()` failed without reverting the execution of `mintPrime()`.
-
-I was able to reproduce a (highly contrived) edge case in which `purchasePrime()` receives a longer than expected return value and incorrectly parses the result, leading to incorrect data being logged for `tokenId` and `serial`. The likelihood of this case occurring increases if the AvastarTeleporter contract is untrusted or modifies the behaviour of `mintPrimes()`.
-
-Consider the example of a modified `mintPrime()` function that returns 128 bytes of garbage data. `purchasePrime()` accepts this data without generating an error or stopping execution, despite being longer than the expected 64 bytes. It still parses the first and second 32 byte words as `uint256` regardless of the original data type.
-
-```solidity
-// EXAMPLE
-// this function has the same 4 byte signature as the real `mintPrime()` but returns garbage data for illustrative purposes
-
-function mintPrime(address, uint256, uint8, uint8, uint8, uint8)
-	external
-	pure
-	returns(bytes memory)
-{
-	// assembly used to return 128 bytes of data without prepending length and location values
-	assembly {
-		// begin at free memory pointer
-		let start := mload(0x40)
-		// start position of fourth memory slot
-		let offset := 0x80
-		// 0xffff...ffff
-		let junk := sub(0, 1)
-
-		// loop start condition
-		for { let i := 0 }
-		// loop end condition
-		lt(i, offset)
-		// increment memory position by one slot for each iteration
-		{ i := add(i, 0x20) } {
-			// main loop logic
-			// store junk at current memory slot
-			mstore(add(start, i), junk)
-		}
-		// return 128 bytes of junk from memory
-		return (start, offset)
-	}
-}
-```
-
-<img src={return_data} width="1200" alt="return_data" />
-
-> 05/02/20
-
-There have also been changes to the input validations in these functions which alters the set of possible outcomes. `mintPrime()` and `mintReplicant()` can now successfully mint a token with a Gender of `ANY`. A minter level account can do this by accident or maliciously. If such a token is minted, its metadata will display as female based on the ternary operation on L261 and L289 of AvastarMetadata.
-
-```solidity
-metadata = strConcat(metadata, (gender == Gender.MALE) ? ' Male ' : ' Female ');
-```
-
-`mintReplicant()` also removes a check that the owner is not `address(0)`. However, this is validated again in the ERC-721 `_mint()`. This redundancy allows the function to revert as expected when `address(0)` is passed as the token owner.
+### H04: Unchecked Return Call Could Lead to Incorrect Debiting of User Balances
 
 ##### Location
 
-L217, `purchasePrime()`, AvastarPrimeMinter.
+[L217](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarPrimeMinter.sol#L217) in the `purchasePrime()` function in AvastarPrimeMinter does not validate the return value of an external call.
 
-##### Description
-
-User-driven token minting of Primes is initialized in the AvastarPrimeMinter contract. A user deposits enough ether to cover the price of the token they wish to purchase (validated off-chain). A worker address with minter permissions they calls `purchasePrime()` on behalf of the user, passing the token information. The user's balance is debited and the call is forwarded to the AvastarTeleporter contract to mint the token.
+User-driven token minting of Primes is initialized in the AvastarPrimeMinter contract. A user deposits enough ether to cover the price of the token they wish to purchase (this price is set and validated off-chain). A worker address with `minter` permissions calls `purchasePrime()` on behalf of the user. The user's balance is debited and the call is forwarded to the AvastarTeleporter contract to mint the token.
 
 ```solidity
 (tokenId, serial) = teleporterContract.mintPrime(
@@ -411,32 +337,31 @@ User-driven token minting of Primes is initialized in the AvastarPrimeMinter con
 );
 ```
 
-The best practice of the "Check-Effects-Interaction Pattern" would guide that this call should be explicitly validated. If it fails for any reason, the `purchasePrime()` function should reverse the changes to the user and global ether balances.
+This call should be explicitly validated. If it fails for any reason or returns unexpected data, the `purchasePrime()` function should reverse the changes to the user's and global ether balances.
 
-As presently written, this function returns two expected `uint256` values from the Teleporter contract. Under certain circumstances, however, it is possible for the external sub-call to fail or return unexpected values without the main transaction reverting. In such a case, the user's ether balance, the ether balance available to the owner to withdraw, and the received serial and tokenId values can all be erroneously changed in the contract's storage.
+As presently written, this function returns two expected `uint256` values from the Teleporter contract: `tokenId` and `serial`. Under certain circumstances, however, it is possible for an external sub-call to fail or return unexpected values without the main transaction reverting. In such a case, the user's ether balance, the ether balance available to the owner to withdraw can be erroneously changed in the contract's storage. Futhermore, `tokenId` and `serial` can be returned as incorrect values.
 
-For example, if the Teleporter returns data of an incorrect length or type, PrimeMinter attempt to convert this into two `uint256` values and still considers the transaction a success.
+For example, if the AvastarTeleporter returns data of an incorrect length or type, AvastarPrimeMinter will attempt to decode the calldata into two `uint256` values, regardless of their original type or length.
 
 ##### Recommendation
 
-There are several options to validate the return value of this call. The first involves using using the lower-level call version, which exposes access to two return values. A `bool` indicates whether the call succeeded and a `bytes memory` value returns any data from the function being called. The later can be explicitly checked for the expected length of two `uint256` return values.
+One option for explictly validating the call uses the lower-level raw call syntax. This exposes access to two return values: a `bool` indicating whether the call succeeded and a `bytes memory` value with any return data from the function being called. The later can be explicitly checked for the expected length of two `uint256` return values.
 
-> 05/02/20
-> This section of code replaces an under-explained example. The logic of the function is:
+The following section of code provides and example implimentation of this concept. The logic of the function is:
 
-- perform the same validations as the original function
+- perform the same input validation as the original function
 - perform the same balance accounting as the original function
-- calculate the 4 byte function signature and pack the arguments into the correct `calldata` format using `abi.encodeWithSignature()`
+- calculate the 4-byte function signature and pack the arguments into the correct `calldata` format using `abi.encodeWithSignature()`
 - Explicitly check the success and return data length of the call. It should be 64 bytes long
 - Revert if either condition fails
-- Parse the data with `abi.decode()`
-- Emit same event as original function
-- Return `traitId` and `serial` as expected. Because they are named return variables they do not need to be explicitly returned in the function body with `return (traitId, serial)`
+- Parse the raw data with `abi.decode()` into distinct values
+- Emit the same event as the original function
+- Return `traitId` and `serial` as expected. Because they are named in the function declaration they do not need to be explicitly returned in the function body with something `return (traitId, serial)`
 - Note: the function signature of `0xc8c4a80a` will change if the parameter types or name of `mintPrime()` change
 - Note: it is possible to craft a colliding signature for an arbitrary function with a different name
 - Note: return values do not affect the function signature
-- Note: `enum` types are encoded as the smallest `uint` type that can fit all their possible values (`uint8` in this case)
-- The resulting `calldata` constructed by this function and sent to AvastarTeleporter is exactly the same as: `"teleporterContract.mintPrime(_purchaser, _traits, currentGeneration, currentSeries, _gender, _ranking)"`
+- Note: `enum` types are encoded as the smallest `uint` type that can fit all its possible values (`uint8` in this case)
+- The resulting `calldata` constructed by this function and sent to AvastarTeleporter is exactly the same as the calldata from: `"teleporterContract.mintPrime(_purchaser, _traits, currentGeneration, currentSeries, _gender, _ranking)"`
 
 ```solidity
 function purchasePrime(
@@ -485,13 +410,65 @@ function purchasePrime(
 
 Returned calldata:
 
-<br/>
+<br />
 <img src={calldata} width="1200" alt="calldata" />
-<br/>
+<br />
 
 Another option for increasing the certainty that the returned data is correct is by through relating the two values `require(tokenId >= serial)`.
 
 Finally, consider if AvastarPrimeMinter needs the return values at all. They are only used in an event that largely duplicates a similar event emitted in AvastarTeleporter.
+
+##### Status
+
+This issue was acknowledged and determined to be low risk based on the trust model between the two contracts. New unit tests were added to check for failing conditions.
+
+One remaining risk is this (highly contrived) hypothetical in which `purchasePrime()` receives a longer than expected return value and incorrectly parses the result, leading to incorrect data being logged for `tokenId` and `serial`. The likelihood of this case occurring increases if the AvastarTeleporter contract is untrusted or if it modifies the behaviour of `mintPrimes()`.
+
+Consider a modified `mintPrime()` function that returns 128 bytes of garbage data. `purchasePrime()` accepts this data without generating an error or halting execution, despite the return being longer than the expected 64 bytes. It still parses the first and second 32-byte words as `uint256`, regardless of their original data type.
+
+```solidity
+// EXAMPLE
+// this function has the same 4-byte signature (0x46c91e59) as the real `mintPrime()` but returns garbage data for illustrative purposes
+
+function mintPrime(address, uint256, uint8, uint8, uint8, uint8)
+	external
+	pure
+	returns(bytes memory)
+{
+	// assembly used to return 128 bytes of data without prepending length and location values
+	assembly {
+		// begin at free memory pointer
+		let start := mload(0x40)
+		// start position of fourth memory slot
+		let offset := 0x80
+		// 0xffff...ffff
+		let junk := sub(0, 1)
+
+		// loop start condition
+		for { let i := 0 }
+		// loop end condition
+		lt(i, offset)
+		// increment memory position by one slot for each iteration
+		{ i := add(i, 0x20) } {
+			// main loop logic
+			// store junk at current memory slot
+			mstore(add(start, i), junk)
+		}
+		// return 128 bytes of junk from memory
+		return (start, offset)
+	}
+}
+```
+
+<img src={return_data} width="1200" alt="return_data" />
+
+There have also been changes to the input validations in these functions which alters the set of possible outcomes. `mintPrime()` and `mintReplicant()` can now successfully mint a token with a Gender of `ANY`, which was previously disallowed. A minter level account can do this by accident or maliciously. If such a token is minted, its metadata will display as Female based on the ternary operation on [L261](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L261) and [L289](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L261) of AvastarMetadata.
+
+```solidity
+metadata = strConcat(metadata, (gender == Gender.MALE) ? ' Male ' : ' Female ');
+```
+
+`mintReplicant()` also removes a check that the owner is not `address(0)`. However, this is validated again in the ERC-721 `_mint()`. This redundancy allows the function to revert as expected if `address(0)` is passed as the token owner.
 
 ## Medium Severity
 
@@ -718,7 +695,7 @@ Attribution memory attrib = attributionByGeneration[uint8(_generation)];
 
 This mapping attempts to reference an Attribution struct that does not yet exist. Access to uninitialized storage can have dangerous and unpredictable effects, including jumps to arbitrary pieces of code.
 
-### Recommendations
+##### Recommendations
 
 - Create a separate flag not stored in the struct that is toggled on when the `setAttribution()` function is called
 - Add an explicit check for data saved at a given Attribution mapping before allowing access to that storage location
@@ -1248,6 +1225,11 @@ Selectively batching calls from AvastarMetadata to AvastarTeleporter can substan
 - [L279](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L279): `mediaURI(_tokenId)` checks `totalSupply()` again
 
 2.  An [initial call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L233) is made to get `Avastar.wave`. Based on the result, a [separate call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L236-L240) then retrieves either a Prime or Replicant struct. If the Avastar struct stored Series, Gender and `ranking` (only 3 additional bytes combined) all of the necessary information could be returned in one call. These additional values could be tightly packed into unused space in the Avastar struct.
+
+asffa
+asdd
+
+    ss
 
 3.  Each of 12 traits in the loop makes 2 external calls.
 

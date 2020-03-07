@@ -19,7 +19,7 @@ export default {
     gray: "#cccccc",
     modes: {
       light: {
-        text: "#222222",
+        text: "#212121",
         background: "#ffffff",
         primary: "#ff9999",
         secondary: "#99cc99 ",
@@ -30,8 +30,8 @@ export default {
         gray: "#cccccc"
       },
       dark: {
-        text: "#ffffff",
-        background: "#222222",
+        text: "#eeeeee",
+        background: "#212121",
         primary: "#ff9999",
         secondary: "#99cc99 ",
         highlight: "#cc99cc",
@@ -81,13 +81,17 @@ export default {
     h2: {
       mt: 5,
       mb: 2,
+      pb: 2,
       borderBottom: t => `2px solid ${t.colors.primary}`,
       variant: "textStyles.heading",
+      textTransform: "uppercase",
+      fontWeight: 200,
       fontSize: 5
     },
     h3: {
-      mt: 4,
+      mt: 5,
       mb: 2,
+      pb: 2,
       borderBottom: t => `2px solid ${t.colors.highlight}`,
       variant: "textStyles.heading",
       fontSize: 4
@@ -99,6 +103,7 @@ export default {
     h5: {
       mt: 4,
       mb: 2,
+      pb: 2,
       borderBottom: t => `2px solid ${t.colors.primary}`,
       variant: "textStyles.heading",
       display: "inline",
@@ -130,7 +135,8 @@ export default {
       textDecoration: "underline",
       color: "text",
       "&:hover": {
-        color: "primary"
+        color: "primary",
+        cursor: "pointer"
       }
     },
     inlineCode: {
