@@ -1,7 +1,16 @@
+const remarkSlug = require("remark-slug");
+
 module.exports = {
   plugins: [
+    `gatsby-plugin-react-helmet`,
+    {
+      resolve: "gatsby-plugin-mdx",
+      options: {
+        remarkPlugins: [remarkSlug]
+      }
+    },
     "gatsby-plugin-theme-ui",
-    "gatsby-plugin-mdx",
+    `gatsby-plugin-sharp`,
     {
       resolve: `gatsby-transformer-remark`,
       options: {
@@ -9,7 +18,7 @@ module.exports = {
           {
             resolve: `gatsby-remark-images`,
             options: {
-              maxWidth: 768
+              maxWidth: 1200
             }
           }
         ]
