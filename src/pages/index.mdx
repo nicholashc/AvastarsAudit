@@ -30,7 +30,7 @@ v0.3.0<br/>
 <br />
 <br />
 <br />
-\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\*
+\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -474,25 +474,17 @@ metadata = strConcat(metadata, (gender == Gender.MALE) ? ' Male ' : ' Female ');
 
 ### M01: Denial of Service and Griefing During Minting
 
-##### Status
-
-01/28/20
-
-This issue is partially mitigated by the Avastars team's plan to run multiple `minters`.This issue was originally reported in the 12/01/20 Preliminary Assessment.
-
-##### Location
-
-`deposit()` and `withdrawDepositorBalance()` in AvastarPrimeMinter.
-
 ##### Description
 
-The unique payment system opens up a potential griefing vector during minting. It's possible for a malicious user to continuously deposit funds as if they wanted to purchase an Avastar, wait for the minter to send a transaction, then front-run this transaction and withdraw their funds. This would cause the purchase transaction from the minter to fail and could slow service for anyone buying tokens, depending on how many active minter addresses there are. While the malicious actor does not gain anything directly from this type of attack, it does have the potential to slow or halt operation.
+The Avastars payment system opens up a potential griefing vector during the minting process. It's possible for a malicious user to continuously deposit funds as if they wanted to purchase an Avastar, wait for the minter to send a callback transaction, then front-run this transaction and withdraw their funds. This sequence involves the `deposit()` function on [L150-156](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L150-L156) and the `withdrawDepositorBalance()` function on [L175-184](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L175-L184) in AvastarPrimeMinter.
 
-Another variation of this DoS vector not discussed in the previous report involves griefing the minter system with small dust deposits from different addresses. While the system could likely adapt quickly, a motivated attacker could flood any event monitoring system with a stream of 1 Wei deposits from new accounts. Since there is no price information in the contracts, this would be difficult to distinguish from legitimate user without syncing with the backend system. Reliance on external validation of data is a potential weak point in the decentralization of the application.
+In this scenario the `purchasePrime()` callback transaction on [L200-L222](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L200-L222) send from the minter will fail because the depositer no longer has a sufficient balance to proceed with the purchase. Given a limited number of minter addresses, this and could slow or prevent service for other users attempting to buy tokens. While the malicious actor does not gain anything directly from this type of attack, it does have the potential to slow or halt operation.
+
+Another variation of this DoS vector involves griefing the minter system with small dust deposits from different addresses. While any backend system could adapt quickly by filtering out these deposits, a motivated attacker could flood a stream of 1 wei deposits from new accounts. Reliance on external validation of deposit data is a potential weak point in the decentralization of the application.
 
 ##### Recommendation 1
 
-The first general strategy maintains the existing deposit and withdraw system. It focuses on making the minters resilient to changing conditions.
+Maintain the current architecture while making the minters resilient to changing conditions.
 
 The `minters` should:
 
@@ -508,12 +500,16 @@ The `minters` should:
 Risks:
 
 - Key loss / account compromise
-- Downtime / node and server overhead
-- Trust model that requires the users have faith in a closed system
+- Downtime and maintainance requirements for backend nodes and associated scripts
+- Trust model requires users have faith in a closed system
 
 ##### Recommendation 2
 
-An alternative model involves users committing some information on-chain along with their deposit. This could be a signature or hashed value of the token traits. To prevent withdrawal griefing, users could be require to commit to some minimum deposit period. If the transaction is not completed by the minter callback in a reasonable time frame, their ability to withdraw is unlocked.
+An alternative model involves users committing some information on-chain along with their deposit. This could be a signature or hashed value of the token traits with an additional salt. To prevent withdrawal griefing, users could be require to commit to some minimum deposit period. If the transaction is not completed by the minter callback in a reasonable time frame, their ability to withdraw is unlocked.
+
+##### Status
+
+This issue is partially mitigated by the Avastars team's plan to run multiple `minters`. In practice, the number of minters could be scaled to match demand. However, the associated key managementment risks would also increase.
 
 ### M02: Admin Overwrite Permissions
 
