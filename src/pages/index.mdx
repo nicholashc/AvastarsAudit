@@ -21,16 +21,16 @@ export default Layout;
 
 # Avastars Smart Contract Audit Report
 
-v0.3.0<br/>
-5 March 2020<br/>
-[@nicholashc](https://github.com/nicholashc)<br/>
+v0.3.0<br />
+5 March 2020<br />
+[@nicholashc](https://github.com/nicholashc)<br />
 
 ---
 
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -122,7 +122,7 @@ This contract is still in development, but has much of the same functionality as
 
 ### Token Design
 
-Avastars tokens are ERC-721 compliant non-fungible tokens. An Avastar can be part one of two waves: Prime or Replicant. Primes are minted within unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored onchain as svg layers.
+Avastars tokens are ERC-721 compliant non-fungible tokens. An Avastar can be part one of two waves: Prime or Replicant. Primes are minted within unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored on-chain as svg layers.
 
 Replicants are produced from Primes by recombining their Traits. The supply of Replicants is not specified in the contracts but is designed to never surpass the supply of Primes.
 Users can mint Primes by depositing funds in the smart contract. An admin account then sends a 2nd callback transaction with the genome, traits, and other features as calldata. The transaction accounts for the user's funds in escrow and mints the corresponding token.
@@ -303,7 +303,7 @@ The Avastar struct is loaded in memory and its generation and serial are used to
 Prime memory prime = primesByGeneration[uint8(avastar.generation)][uint256(avastar.serial)];
 ```
 
-Some functions use a similar pattern to make state changes. Consider a scenario with more Replicants in a Generation than Primes. `approveTraitAccess()` does not verify if the `tokenId` is a Prime or Replicant. Owners can store approvals for access to a Replicant's nonexistent `replicated` array. Out-of-bounds array access can have serious consequences, including the potential access, write, or overwrite arbitrary storage values. See [this example](https://github.com/Arachnid/uscc/tree/master/submissions-2017/doughoyte) for an extreme case of out-of-bounds array access leaning to arbitrary stroage changes.
+Some functions use a similar pattern to make state changes. Consider a scenario with more Replicants in a Generation than Primes. `approveTraitAccess()` does not verify if the `tokenId` is a Prime or Replicant. Owners can store approvals for access to a Replicant's nonexistent `replicated` array. Out-of-bounds array access can have serious consequences, including the potential access, write, or overwrite arbitrary storage values. See [this example](https://github.com/Arachnid/uscc/tree/master/submissions-2017/doughoyte) for an extreme case of out-of-bounds array access leaning to arbitrary storage changes.
 
 ##### Recommendations
 
@@ -339,15 +339,15 @@ User-driven token minting of Primes is initialized in the AvastarPrimeMinter con
 
 This call should be explicitly validated. If it fails for any reason or returns unexpected data, the `purchasePrime()` function should reverse the changes to the user's and global ether balances.
 
-As presently written, this function returns two expected `uint256` values from the Teleporter contract: `tokenId` and `serial`. Under certain circumstances, however, it is possible for an external sub-call to fail or return unexpected values without the main transaction reverting. In such a case, the user's ether balance, the ether balance available to the owner to withdraw can be erroneously changed in the contract's storage. Futhermore, `tokenId` and `serial` can be returned as incorrect values.
+As presently written, this function returns two expected `uint256` values from the AvastarTeleporter contract: `tokenId` and `serial`. Under certain circumstances, however, it is possible for an external sub-call to fail or return unexpected values without the main transaction reverting. In such a case, the user's ether balance, the ether balance available to the owner to withdraw can be erroneously changed in the contract's storage. Furthermore, `tokenId` and `serial` can be returned as incorrect values.
 
 For example, if the AvastarTeleporter returns data of an incorrect length or type, AvastarPrimeMinter will attempt to decode the calldata into two `uint256` values, regardless of their original type or length.
 
 ##### Recommendation
 
-One option for explictly validating the call uses the lower-level raw call syntax. This exposes access to two return values: a `bool` indicating whether the call succeeded and a `bytes memory` value with any return data from the function being called. The later can be explicitly checked for the expected length of two `uint256` return values.
+- One option for explicitly validating the call uses the lower-level raw call syntax. This exposes access to two return values: a `bool` indicating whether the call succeeded and a `bytes memory` value with any return data from the function being called. The later can be explicitly checked for the expected length of two `uint256` return values.
 
-The following section of code provides and example implimentation of this concept. The logic of the function is:
+The following section of code provides and example implementation of this concept. The logic of the function is:
 
 - perform the same input validation as the original function
 - perform the same balance accounting as the original function
@@ -478,7 +478,7 @@ metadata = strConcat(metadata, (gender == Gender.MALE) ? ' Male ' : ' Female ');
 
 The Avastars payment system opens up a potential griefing vector during the minting process. It's possible for a malicious user to continuously deposit funds as if they wanted to purchase an Avastar, wait for the minter to send a callback transaction, then front-run this transaction and withdraw their funds. This sequence involves the `deposit()` function on [L150-156](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L150-L156) and the `withdrawDepositorBalance()` function on [L175-184](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L175-L184) in AvastarPrimeMinter.
 
-In this scenario the `purchasePrime()` callback transaction on [L200-L222](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L200-L222) send from the minter will fail because the depositer no longer has a sufficient balance to proceed with the purchase. Given a limited number of minter addresses, this and could slow or prevent service for other users attempting to buy tokens. While the malicious actor does not gain anything directly from this type of attack, it does have the potential to slow or halt operation.
+In this scenario the `purchasePrime()` callback transaction on [L200-L222](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L200-L222) send from the minter will fail because the depositor no longer has a sufficient balance to proceed with the purchase. Given a limited number of minter addresses, this and could slow or prevent service for other users attempting to buy tokens. While the malicious actor does not gain anything directly from this type of attack, it does have the potential to slow or halt operation.
 
 Another variation of this DoS vector involves griefing the minter system with small dust deposits from different addresses. While any backend system could adapt quickly by filtering out these deposits, a motivated attacker could flood a stream of 1 wei deposits from new accounts. Reliance on external validation of deposit data is a potential weak point in the decentralization of the application.
 
@@ -500,7 +500,7 @@ The `minters` should:
 Risks:
 
 - Key loss / account compromise
-- Downtime and maintainance requirements for backend nodes and associated scripts
+- Downtime and maintenance requirements for backend nodes and associated scripts
 - Trust model requires users have faith in a closed system
 
 ##### Recommendation 2
@@ -509,30 +509,31 @@ An alternative model involves users committing some information on-chain along w
 
 ##### Status
 
-This issue is partially mitigated by the Avastars team's plan to run multiple `minters`. In practice, the number of minters could be scaled to match demand. However, the associated key managementment risks would also increase.
+This issue is partially mitigated by the Avastars team's plan to run multiple `minters`. In practice, the number of minters could be scaled to match demand. However, the associated key management risks would also increase.
 
 ### M02: Admin Overwrite Permissions
 
-##### Status
-
-    > 01/28/20
-    > The Avastars team has removed the direct ability to overwrite storage. They have also added an `onlyBeforeProd()`modifier that provides users with greater assurances that their token's data will not change after minting in that generation and series has begun.This issue was originally reported in the 12/01/20 Preliminary Assessment.
-
-##### Location
-
-`extendTraitArt()` and `setAttribution()` in TraitFactory. `setTokenUriBase()`, `setMediaUriBase()` and `setViewUriBase()` in AvastarMetadata. `setMetadataContractAddress()` in AvastarTeleporter. `setTeleporterContract()` in AvastarPrimeMinter.
-
 ##### Description
 
-There are still some areas where it is possible for token data to be corrupted or omitted, by accident or by a compromised admin account. These include:
+In the following locations the admin-level accounts have the ability to write or overwrite arbitrary data with little or no restrictions:
 
-- In `setTeleporterContract()`, the address can be changed at any time by the `sysAdmin` account. Users may have deposited funds that are sent to a new contract. The `whenPaused()` modifier provides limited assurances as it can be toggled at any time, even in the same transaction
+`extendTraitArt()` on [L218-L225](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L218-L225) and `setAttribution()` on [L152-L162](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L218-L225) in TraitFactory. `setTokenUriBase()` on [L130-L138](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L218-L225), `setMediaUriBase()` on [L146-L154](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L146-L154) and `setViewUriBase()` on [L162-L170](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L162-L170) in AvastarMetadata. `setMetadataContractAddress()` on [L51-L65](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L51-L65) in AvastarTeleporter. `setTeleporterContract()` on [L96-L109](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarPrimeMinter.sol#L96-L109) in AvastarPrimeMinter.
+
+This creates the possibility for token data to be corrupted or omitted, either by accident or by a compromised admin account.
+
+These include:
+
+- In `setTeleporterContract()`, the address can be changed at any time by the `sysAdmin` account. Users may have deposited funds that are sent to a new contract. The `whenPaused()` modifier provides limited assurances as it can be toggled at any time by the admin, even in the same transaction
 - Similarly, `setMetadataContractAddress()` can be changed at any time, potentially breaking the direct link to the artwork and metadata
 - Generation and Series can be changed at any time and do not need to follow any logical order
 - Traits cannot be updated after a generation begins, but they can be prevented from being added. One accidental or malicious minting per generation can render the entire contract moot if the traits have not been completely added
 - `setTokenUriBase()`, `setMediaUriBase()`,`setViewUriBase()` can be altered at will or improperly initialized with empty strings
 
-While this does not pose an explicit security risk as long as the admins remain trustworthy, it does undermine the minimized trust model that many NFT owners expect. Furthermore, unchecked admin powers present an ongoing threat if their keys are ever compromised.
+While this does not pose an explicit security risk as long as the admins remain trustworthy, it does undermine the minimized trust model that many NFT users expect. Furthermore, unchecked admin powers present an ongoing threat if their keys are ever compromised. Another risk is the "bus threat" where only two individuals have the ability to update this data. If one or both are unable to act, these components of the contracts will cease to function correctly.
+
+##### Status
+
+The Avastars team has removed the direct ability to overwrite storage. They have also added an `onlyBeforeProd()` modifier on [L41-L44](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L41-L44) in TraitFactory that provides users with greater assurances that their token's data will not change after minting in that generation and series has begun. However, there remains the risk of a generation accidentally or maliciously begining before traits are added.This would prevent the correct traits and other metadata from being added.
 
 ### M03 Irreversible Permissions and Other Access Control Issues
 
@@ -556,7 +557,7 @@ AccessControl
 
 The current implementation of the AccessControl contract does not include methods for removing privileged accounts. This poses several potential risks.
 
-The AvastarPrimeMinter (and presumably AvastarReplicantMinter) contracts must have minter permissions in the AvastarTeleporter contract to successfully forward user purchases. A smart contract with elevated permissions and access to the interface methods of the Teleporter contract presents a wider attack surface. Hijacking the Minter's execution context to make a permission call as `msg.sender` is one example. Minter contracts can be `paused` or `upgraded` but minter status cannot be revoked.
+The AvastarPrimeMinter (and presumably AvastarReplicantMinter) contracts must have minter permissions in the AvastarTeleporter contract to successfully forward user purchases. A smart contract with elevated permissions and access to the interface methods of the AvastarTeleporter contract presents a wider attack surface. Hijacking the Minter's execution context to make a permission call as `msg.sender` is one example. Minter contracts can be `paused` or `upgraded` but minter status cannot be revoked.
 
 Potential network congestion during the minting process will most likely necessitate multiple agents with minter permissions, potentially a large number. Segregating access to each role allows for more secure private key management of the different accounts. The `sysAdmin` key management should aspire to the highest level of security that can be reliably managed by the team.
 
@@ -1086,7 +1087,7 @@ Solidity used to have a bug that produced unexpected values when small types wer
 
 ##### Description
 
-This would be consistent with how the Teleporter address is set in the Metadata contract.
+This would be consistent with how the AvastarTeleporter address is set in the Metadata contract.
 
 ### N06: Set Short Circuits With Mostly Likely Case First
 
@@ -1221,11 +1222,6 @@ Selectively batching calls from AvastarMetadata to AvastarTeleporter can substan
 - [L279](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L279): `mediaURI(_tokenId)` checks `totalSupply()` again
 
 2.  An [initial call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L233) is made to get `Avastar.wave`. Based on the result, a [separate call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L236-L240) then retrieves either a Prime or Replicant struct. If the Avastar struct stored Series, Gender and `ranking` (only 3 additional bytes combined) all of the necessary information could be returned in one call. These additional values could be tightly packed into unused space in the Avastar struct.
-
-asffa
-asdd
-
-    ss
 
 3.  Each of 12 traits in the loop makes 2 external calls.
 
@@ -1568,7 +1564,7 @@ Key points:
 4. In general, the source svgs often contain redundant data, blank attributes, unnecessary complexity (polylines, patterns, etc), and use design techniques that exponentially increase the storage footprint (clipping masks)
 5. It is possible to store critical values in tightly-packed structs or other efficient data structures. Repeated values can be stored as constants. The original image can still be reconstructed completely without losing information. The tradeoff is increased smart contract code and image reconstruction complexity.
 6. In my honest opinion, attempting to store the full xml-tagged svgs, particularly poorly optimized svgs, is just a bad fit for the current capabilities of smart contracts. It's a square peg in a round hole. If the project was just beginning, my advice would be: consider the most restrictive element of the project first and design to those constraints
-7. If having the whole file onchain is truly important, consider alternative optimization software, compression software, and establish strict design processes that produce much smaller code footprints
+7. If having the whole file on-chain is truly important, consider alternative optimization software, compression software, and establish strict design processes that produce much smaller code footprints
 8. There may be a point where saving some gas is not worth the cost of redeveloping large sections of code base.
 
 ### Disclaimer
