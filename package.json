@@ -16,7 +16,7 @@
     "@theme-ui/prism": "^0.3.0",
     "@theme-ui/sidenav": "^0.3.1",
     "gatsby": "^2.19.32",
-    "gatsby-cli": "^2.10.2",
+    "gatsby-cli": "^2.10.11",
     "gatsby-plugin-mdx": "^1.0.77",
     "gatsby-plugin-sharp": "^2.4.7",
     "gatsby-plugin-theme-ui": "^0.3.0",
