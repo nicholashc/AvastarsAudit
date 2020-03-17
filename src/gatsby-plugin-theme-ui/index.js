@@ -89,8 +89,8 @@ export default {
       fontSize: 5
     },
     h3: {
-      mt: 5,
-      mb: 2,
+      mt: 4,
+      mb: 4,
       pb: 2,
       borderBottom: t => `2px solid ${t.colors.highlight}`,
       variant: "textStyles.heading",

@@ -22,7 +22,7 @@ export default Layout;
 # Avastars Smart Contract Audit Report
 
 v0.3.0<br />
-5 March 2020<br />
+16 March 2020<br />
 [@nicholashc](https://github.com/nicholashc)<br />
 
 ---
@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -124,7 +124,8 @@ This contract is still in development, but has much of the same functionality as
 
 Avastars tokens are ERC-721 compliant non-fungible tokens. An Avastar can be part one of two waves: Prime or Replicant. Primes are minted within unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored on-chain as svg layers.
 
-Replicants are produced from Primes by recombining their Traits. The supply of Replicants is not specified in the contracts but is designed to never surpass the supply of Primes.
+Replicants are produced from Primes by recombining Traits. The supply of Replicants is not specified in the contracts but is designed to never surpass the supply of Primes.
+
 Users can mint Primes by depositing funds in the smart contract. An admin account then sends a 2nd callback transaction with the genome, traits, and other features as calldata. The transaction accounts for the user's funds in escrow and mints the corresponding token.
 
 _note draft image..._
@@ -422,7 +423,7 @@ Finally, consider if AvastarPrimeMinter needs the return values at all. They are
 
 This issue was acknowledged and determined to be low risk based on the trust model between the two contracts. New unit tests were added to check for failing conditions.
 
-One remaining risk is this (highly contrived) hypothetical in which `purchasePrime()` receives a longer than expected return value and incorrectly parses the result, leading to incorrect data being logged for `tokenId` and `serial`. The likelihood of this case occurring increases if the AvastarTeleporter contract is untrusted or if it modifies the behaviour of `mintPrimes()`.
+One remaining risk is this (highly contrived) hypothetical in which `purchasePrime()` receives a longer than expected return value and incorrectly parses the result, leading to incorrect data being logged for `tokenId` and `serial`. The likelihood of this case occurring increases if the AvastarTeleporter contract is untrusted or if it modifies the behaviour of the `mintPrimes()` function.
 
 Consider a modified `mintPrime()` function that returns 128 bytes of garbage data. `purchasePrime()` accepts this data without generating an error or halting execution, despite the return being longer than the expected 64 bytes. It still parses the first and second 32-byte words as `uint256`, regardless of their original data type.
 
@@ -515,107 +516,118 @@ This issue is partially mitigated by the Avastars team's plan to run multiple `m
 
 ##### Description
 
-In the following locations the admin-level accounts have the ability to write or overwrite arbitrary data with little or no restrictions:
+Administrator accounts with special permissions have the ability to write or overwrite arbitrary data. There are little or no restrictions on unintended state modification in the following locations:
 
-`extendTraitArt()` on [L218-L225](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L218-L225) and `setAttribution()` on [L152-L162](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L218-L225) in TraitFactory. `setTokenUriBase()` on [L130-L138](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L218-L225), `setMediaUriBase()` on [L146-L154](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L146-L154) and `setViewUriBase()` on [L162-L170](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L162-L170) in AvastarMetadata. `setMetadataContractAddress()` on [L51-L65](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L51-L65) in AvastarTeleporter. `setTeleporterContract()` on [L96-L109](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarPrimeMinter.sol#L96-L109) in AvastarPrimeMinter.
+- `extendTraitArt()` on [L232-L239](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L218-L225) and `setAttribution()` on [L162-L171](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/TraitFactory.sol#L162-L171) in TraitFactory
+- `setTokenUriBase()` on [L102-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarMetadata.sol#L102-L110), `setMediaUriBase()` on [L118-L126](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarMetadata.sol#L118-L126) and `setViewUriBase()` on [L134-L142](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarMetadata.sol#L134-L142) in AvastarMetadata
+- `setMetadataContract()` on [L51-L65](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarTeleporter.sol#L51-L65) in AvastarTeleporter
+- `setTeleporterContract()` on [L79-L92](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L79-L92) in AvastarPrimeMinter
 
-This creates the possibility for token data to be corrupted or omitted, either by accident or by a compromised admin account.
+If an administrator key is compromised, used maliciously, or if a malformed transaction is accidentally sent contract state be omitted, altered, or removed. Specific examples include:
 
-These include:
-
-- In `setTeleporterContract()`, the address can be changed at any time by the `sysAdmin` account. Users may have deposited funds that are sent to a new contract. The `whenPaused()` modifier provides limited assurances as it can be toggled at any time by the admin, even in the same transaction
-- Similarly, `setMetadataContractAddress()` can be changed at any time, potentially breaking the direct link to the artwork and metadata
-- Generation and Series can be changed at any time and do not need to follow any logical order
-- Traits cannot be updated after a generation begins, but they can be prevented from being added. One accidental or malicious minting per generation can render the entire contract moot if the traits have not been completely added
+- In `setTeleporterContract()`, the AvastarTeleporter contract address can be changed at any time by any address with `sysAdmin` privileges. Users may have deposited funds to purchase a token but do not have a guarantee the correct AvastarTeleporter contract is called. The `whenPaused()` modifier does not meaningfully prevent this case as it can be toggled at any time by a `sysAdmin`, even within the same transaction as `setTeleporterContract()`
+- Similarly, `setMetadataContractAddress()` can be modified at any time, potentially breaking the link between the ERC-721 token and its associated artwork and metadata. On-chain svg images associated with the an NFT is a core component of the Avastars project. As presently constructed, users do not have certainty in the immutability of token metadata
+- Generation and Series can be both changed at any time and do not need to follow any sequential order. A malicious or compromised `sysAdmin` could use these feature to mint specific token numbers with perceived market significance, unexpectedly end a given Series or Generation, and generally cause mayhem
+- Traits cannot be updated after a generation begins, but they can be prevented from being added. One accidental or malicious minting per generation can render the entire contract unusable if the traits have not been completely added
 - `setTokenUriBase()`, `setMediaUriBase()`,`setViewUriBase()` can be altered at will or improperly initialized with empty strings
 
-While this does not pose an explicit security risk as long as the admins remain trustworthy, it does undermine the minimized trust model that many NFT users expect. Furthermore, unchecked admin powers present an ongoing threat if their keys are ever compromised. Another risk is the "bus threat" where only two individuals have the ability to update this data. If one or both are unable to act, these components of the contracts will cease to function correctly.
+While many of these cases do not pose an explicit security risk as long as the administrator remain trustworthy, it does undermine the minimized trust model that many NFT users expect. Furthermore, unchecked admin powers present an ongoing threat if their keys are ever compromised. Another risk of this design pattern is the ["bus factor"](https://en.wikipedia.org/wiki/Bus_factor). Correct initialization and ongoing operation of the contracts is reliant a small and centralized group of privileged addresses.
 
 ##### Status
 
-The Avastars team has removed the direct ability to overwrite storage. They have also added an `onlyBeforeProd()` modifier on [L41-L44](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L41-L44) in TraitFactory that provides users with greater assurances that their token's data will not change after minting in that generation and series has begun. However, there remains the risk of a generation accidentally or maliciously begining before traits are added.This would prevent the correct traits and other metadata from being added.
+The Avastars Team has removed the direct ability to overwrite storage. They have also added an `onlyBeforeProd()` modifier on [L41-L44](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L41-L44) in TraitFactory that provides users with greater assurances that token data will not change after minting. There remains the risk of a generation accidentally or maliciously beginning before traits are added. This would prevent the planned traits and other metadata from being completed and may lead to a situation where contracts needed to be redeploy or wrapped to correctly link token metadata.
 
 ### M03 Irreversible Permissions and Other Access Control Issues
 
-##### Status
-
-> 05/02/20
->
-> Mostly addressed. `owners` can now remove permissioned roles from other accounts with the `stripRoles()` function in AccessControl. It provides greater control over the `minters`. However, `admins` have effective access to the same privileges as `owners` since they are able to grant themselves new roles. The following edge cases are possible if the application's trust model breaks down.
-
-- Nothing in the contracts enforces that any `owners` ever get added
-- Nothing in the contracts enforces that `owners` also receive `admins` privileges, though this was stated as the expected condition
-- if a `sysAdmin` or owner address is compromised they can strip any honest `owners` and `admins` of their roles
-- if the only remaining owner is stripped of, or never receives, `admins` permissions they are not able to pause or update the contract or grant new roles
-- it is possible to remove all of the `admins` and permanently lock the ability to add new roles
-
-##### Location
-
-AccessControl
-
 ##### Description
 
-The current implementation of the AccessControl contract does not include methods for removing privileged accounts. This poses several potential risks.
+The current implementation of the [AccessControl](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol) contract does not include a method for removing privileged accounts. This poses several potential risks, including:
 
-The AvastarPrimeMinter (and presumably AvastarReplicantMinter) contracts must have minter permissions in the AvastarTeleporter contract to successfully forward user purchases. A smart contract with elevated permissions and access to the interface methods of the AvastarTeleporter contract presents a wider attack surface. Hijacking the Minter's execution context to make a permission call as `msg.sender` is one example. Minter contracts can be `paused` or `upgraded` but minter status cannot be revoked.
+1. The AvastarPrimeMinter (and presumably AvastarReplicantMinter) contracts must have minter permissions in the AvastarTeleporter contract to successfully forward user purchases. A smart contract with elevated permissions and access to the interface methods of the AvastarTeleporter contract presents a wider attack surface. Hypothetically, if an attacker re-entered the AvastarPrimeMinter contract, they could make a permissioned call to another contract where `msg.sender` has `minter` permissions
 
-Potential network congestion during the minting process will most likely necessitate multiple agents with minter permissions, potentially a large number. Segregating access to each role allows for more secure private key management of the different accounts. The `sysAdmin` key management should aspire to the highest level of security that can be reliably managed by the team.
+2. AvastarPrimeMinter contracts can be `paused` or `upgraded` but their minter status cannot be revoked. This makes any access-related security issues more difficult to contain
 
-##### Recommendation
+3. Potential network congestion during the minting process will likely necessitate multiple addresses with minter permissions to keep the contracts functioning smoothly. Risk increases with every additional address granted special permissions
 
-- Adding a `removeMinter()` function allows this account to spin up and tear down `minters` as needed, while minimizing the risk of a lost or compromised key
-- The AvastarPrimeMinter contract should ensure that an address is assigned the owner role in the contract's constructor. The comments above the constructor in the the AccessControl contract create the impression that the deploying address is an owner of the contract. However, this address is not assigned the owner level permissions:
+##### Recommendations
+
+- Add a `removeMinter()` function allows a higher-tiered administrator to spin up and tear down `minters` as needed. This can reduce risk in the event that a minter key is lost or compromised key
+- The AvastarPrimeMinter contract should ensure that an address is assigned the `owner` role during construction. The comment on [L21](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L21) in AccessControl create the impression that the deploying address gains both `owner` and `sysAdmin` permissions. However, `owner` status is not assigned automatically
 
 ```solidity
-@notice Sets `msg.sender` as owner and system admin by default.
+    /**
+     * @notice Sets `msg.sender` as owner and system admin by default.
+     * Starts paused. System admin must unpause after full migration.
+     */
+    constructor() public {
+        admins.add(msg.sender);
+}
 ```
+
+##### Status
+
+Mostly addressed. Addresses with `owner` privileges can now remove roles from other addresses by calling the `stripRoles()` function on [L149-L165](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol#L149-L165) in AccessControl. This provides greater flexibility for managing addresses with the `minter` roles. In an attack scenario, however, any address with the `sysAdmin` role effectively has access the privileges of all roles. A `sysAdmin` can grant themselves `owner` and/or `minter` privileges.
+
+The following risks remain if the Avastars trust model breaks down:
+
+- Nothing in the contracts enforces that any `owner` is ever added
+- Nothing in the contracts enforces that an `owner` will also receive `sysAdmin` privileges, though this was described as an intended feature
+- If a `sysAdmin` or `owner` address is compromised they can strip any other honest addresses with of their roles and gain complete control of the contracts
+- If the only remaining `owner` strips all addresses with `sysAdmin` permissions of their roles, there will be no way to pause or update the contract
+- It is possible to remove all of the `sysAdmin` and permanently lock the ability to add new roles
 
 ### M04: Unchecked Array Length Creates uint8 Overflow in for Loop
 
-##### Status
-
-> 05/02/20
->
-> Fixed by checking the length of the array used as input in `approveTraitAccess().`
-
-##### Location
-
-L101, AvastarTeleporter, `approveTraitAccess()`.
-
 ##### Description
 
-This function accepts a dynamically sized array: `uint256[] calldata _primeIds`. The array length is not validated and is used to define the upper limit of iterations in a for loop.
+`approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter accepts a dynamically sized array:
 
 ```solidity
-for (uint8 i = 0; i < _primeIds.length; i++) {...}
+function approveTraitAccess(address _handler, uint256[] calldata _primeIds) external {
+```
+
+The array length is not validated and is used to define the upper limit of iterations in the for loop on [L101](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L101).
+
+```solidity
+for (uint8 i = 0; i < _primeIds.length; i++) {
 ```
 
 The starting variable `i` is a `uint8` type and will overflow to 0 when its value increments beyond 255. The caller can force this overflow by calling the function with more than 255 items in the `_primeIds` array.
 
-The function checks if the caller owns the tokens listed. However, it does not check for duplicate values. A malicious caller only needs to own 1 token and can pass the same id for any number of item in the array payload. There are no immediate consequence of this overflow.
+The function checks if the caller owns the tokenIds provided in the `_primeIds` array. However, it does not check for duplicate values. A malicious caller only needs to own 1 token and can pass the same id for any number of item in the array payload.
 
 ##### Recommendations
 
-- Do not allow dynamic arrays as input in an open function. When an array must be used, define a sensible fixed length. For example: `uint256[8] calldata _primeIds`
-- Favour explicit validation of inputs and results rather than relying on integer type lengths to define the range of acceptable values. The later may fail silently or be unintentionally removed or modified in future versions of the code base
-- Do not allow a parameter that a user can control to dictate the bounds of a loop or similar operation
+- Do not allow dynamic arrays as input in an external or public function. When an array must be used, define a sensible fixed length. For example: `uint256[8] calldata _primeIds`
+- Favour explicit validation of inputs rather than relying on integer type lengths to enforce the range of acceptable values. Since it is unclear that the maximum number the type can hold is acting as a validation, it may fail silently or be unintentionally removed in future versions of the code base
+- Do not allow a user-control parameter to dictate the upper bound of a loop
 - The event `TraitAccessApproved(_handler, _primeIds)` should also validate sensible limits before accepting an array
-
-### M05 Dynamic Array Used for Fixed Length Property
 
 ##### Status
 
-> 05/02/20
->
-> Mostly addressed. The array is now initialized as fixed length `bool[12]` array. Access to this array is explicitly validated. Changing to a non-array data type or expanding the functionality to take advantage of index-specific access is outside of the scope for the development of this feature.
+[Fixed](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/39f3c39b13e6c8aae04f87095d665be0e17747e1#diff-9415ec44e4b764c4ffda3611419a3e92). The function now explicitly checks the length of the array and prevents the overflow. The function still accepts an unbounded array but explicitly limits the maximum size to 256.
 
-##### Location
-
-L77 in AvastarTypes and L166 in PrimeFactory.
+### M05 Dynamic Array Used for Fixed Length Property
 
 ##### Description
 
-The Prime struct is defined as a dynamic array of bool values used to track the state of the token's traits in `bool[] replicated`.
+The `bool[] replicated` array on [L77](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTypes.sol#L77) in the Prime struct is defined as a dynamic array. Its purpose is to track the state of each Prime's traits and flag them when they are used to produce a Replicant. The intended design is for each trait to be single-use.
+
+```solidity
+struct Trait {
+  uint256 id;
+  Generation generation;
+  Series[] series;
+  Gender gender;
+  Gene gene;
+  Rarity rarity;
+  uint8 variation;
+  string name;
+  string svg;
+}
+```
+
+The array is initialized with 32 null values during the token minting on [L166](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L166) in PrimeFactory.
 
 ```solidity
 primesByGeneration[uint8(_generation)].push(
@@ -632,59 +644,73 @@ primesByGeneration[uint8(_generation)].push(
 );
 ```
 
-The syntax above creates a new array initialized with 32 null items. Since this is a dynamic array its length can potentially mutate to greater or less than 32. Explicit length validation is recommended to ensure the type safety of this array. For example, `useTraits()` also accepts a risky unbounded array of `bool[] calldata _traitFlags`.
+Since this is still a dynamic array its length can potentially mutate to greater or less than 32. Since the number of traits is always fixed, this data type seems adds unnecessary risk.
 
 ##### Recommendation
 
-- Use `bool[32] calldata _traitFlags` to explicitly limit the array to its intended length
+- Initialize the struct with a fixed-length array `bool[32] calldata _traitFlags` to explicitly limit its size
 - Consider offering a function that allows for the use of a single trait accessed by index so that the entire array does not need to be looped through with every use
-- Consider using a fixed length data type to track replicated traits. Flip a bit when the flag is set
+- Consider using a non-array data type like `bytes32` to track replicated traits. Flip a bit when the flag is set
+
+##### Status
+
+Mostly addressed. The array is now [defined in the struct](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTypes.sol#L77) as fixed length array.
+
+```solidity
+bool[12] replicated;
+```
+
+This [change also includes a minor adjustment](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/PrimeFactory.sol#L166-L170) to how the array is initialized during token minting.
+
+```solidity
+// Create and store Prime struct
+bool[12] memory replicated;
+primesByGeneration[uint8(_generation)].push(
+    Prime(tokenId, serial, _traits, replicated, _generation, _series, _gender, _ranking)
+);
+```
+
+Changing to a non-array data type or expanding the functionality to take advantage of index-specific access remains outside of the scope for this iteration of the contract.
 
 ### M06: Unchecked Minter Privileges Require Extensive User Trust During Purchases
 
-##### Status
-
-> 05/02/20
->
-> The team understands that the application has been designed with a model that require a degree of trust. Risk from compromised minter accounts is mitigated to some degree with the addition of the `stripRoles()` function.
-
 ##### Description
 
-A core design choice in the project involves extensive permissions for privileged accounts. This allows the project team to reduce their exposure to some risks on a live network and maintain a higher degree of control over the operation of the application. The generation of traits, genes, and other attributes is centralized and off-chain.
+A core design choice in the project involves extensive permissions for privileged accounts. This allows the project team to reduce their exposure to some risks in a live network setting and maintain a higher degree of control over the operation of the smart contracts. The generation of traits, randomization of genes, and many other features are centralized and managed off-chain.
 
-Avastars is unable to offer users any assurances when they deposit their funds in the smart contact to buy a token.
+Avastars is unable to offer users any assurances when they deposit their funds in the smart contact to buy a token. Nothing technical enforces this good-faith promise of honesty.
 
-The minter role can mint new tokens for no cost and assign them to any address. This role can also can mint arbitrary tokens and charge users any amount up to the maximum deposited. This effectively means that any user funds deposited into the contract can be stolen by compromised accounts or malicious administrators. Furthermore, the minter role can selectively refuse service to users or process orders out of sequence. Users have no recourse in any of these cases. Their trust is required.
+The `minter` role can mint new tokens for no cost and gift them to any address. This role can also mint arbitrary tokens and charge users any amount up to the maximum they deposited. Nothing at the contract level ensures that the users receive the token they intended to buy. This effectively means that any user funds deposited into the contract can be stolen by compromised accounts or malicious administrators. Furthermore, the `minter` role can selectively refuse service to users or process orders out of sequence. Users have no recourse in any of these cases. Their trust is required.
+
+##### Recommendation
+
+While I strongly discourage this type of permissioned architecture, it was already deeply embedded in the code base when the audit process began. In lieu of changing the system, I recommend very clear and open communication with users about the elements of the project that are centralized.
+
+##### Status
+
+The Avastars team understands that the application has been designed with a model that requires a high degree of user trust. Risk from compromised minter accounts is mitigated to some degree with the addition of the `stripRoles()` function.
 
 ### M07: Contract Does Not Enforce Supply Limit for Replicants
 
-##### Status
-
-> 05/02/20
->
-> Addressed with unnecessary code duplication. The issue was patched by adding the constant `MAX_REPLICANTS_PER_GENERATION`, which defines the maximum token supply per generation. A new mapping `replicantCountByGeneration` was added to count the number of Replicants minted per Generation. This mapping duplicates an existing mapping called `replicantsByGeneration`, which stores the same information as the length of an array rather than an incremented counter.
-
 ##### Description
 
-The contracts do not enforce a cap on the Replicant supply. As presently designed the minter can create an unlimited supply of Replicants without the need to use traits from the Primes or respect the constants the Prime supply are bound to.
+The contracts do not enforce a cap on the Replicant supply. As presently designed, a `minter` can create an unlimited supply of Replicants without the need to use traits from Primes or respect the maximum Prime supply.
+
+##### Status
+
+Addressed, though with unnecessary code duplication. The issue was patched by adding the following limit on [L15](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/ReplicantFactory.sol#L15) of Replicant Factory.
+
+```solidity
+uint16 public constant MAX_REPLICANTS_PER_GENERATION = 25200;
+```
+
+A new mapping called `replicantCountByGeneration` was added on [L80](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarState.sol#L80) of AvastarState. This variable is validated and then incremented in `mintReplicant()` on [L106-L138](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/ReplicantFactory.sol#L106-L138) of ReplicantFactory. However, the count of Replicants in a generation is already tracked in `replicantsByGeneration` on [L43](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarState.sol#L43) of AvastarState. The length of this array duplicates the same information as the newly added incremented count.
 
 ### M08 Open Access to Uninitialized Storage Pointers
 
-##### Status
-
-> 05/02/20
->
-> Mitigated with a check that prevents the function from continuing execution if `attributionByGeneration` is not set. The act of checking whether or not it set still accesses an uninitialized storage pointer. However, the risk of unauthorized access or corruption of other storage values is minimal.
-
-Rather than incrementing storage keys from 0 like other state variables, mappings use a hash function to generate the starting position of their storage slot(s). These locations are deterministic but distributed over a 2\*\*256-1 search space. This keeps them far away from the 0 indexed storage keys used by static types. The chance of discovering a collision is essentially 0. If `attributionByGeneration` needs to store string values longer than 32 bytes, the next storage location is generated from a (deterministic) hash. See the [Solidity Docs](https://solidity.readthedocs.io/en/latest/miscellaneous.html#mappings-and-dynamic-arrays) for more information.
-
-##### Location
-
-L138, Trait Factory, `getAttributionByGeneration()`.
-
 ##### Description
 
-If `getAttributionByGeneration()` is called with an unset but valid Generation as an argument, it allows access to an uninitialized storage pointer.
+If `getAttributionByGeneration()` on [L133-L144](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L133-L144) in TraitFactory is called with a valid but unset Generation as an argument, it allows access to an uninitialized storage pointer.
 
 ```solidity
 Attribution memory attrib = attributionByGeneration[uint8(_generation)];
@@ -696,6 +722,12 @@ This mapping attempts to reference an Attribution struct that does not yet exist
 
 - Create a separate flag not stored in the struct that is toggled on when the `setAttribution()` function is called
 - Add an explicit check for data saved at a given Attribution mapping before allowing access to that storage location
+
+##### Status
+
+Mitigated with a [check that prevents](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L139) the function from continuing execution if `attributionByGeneration` is not set. The act of checking whether or not it set still accesses an uninitialized storage pointer. However, the risk of unauthorized access or corruption of other storage values is minimal since it is a mapping rather than a simple state variable.
+
+Mappings use a hash function to generate the starting position of their storage slot(s). These locations are deterministic but distributed over a 2\*\*256-1 search space. This keeps them far away from the 0-indexed storage keys used by simple static types. The chance of discovering a collision is essentially 0. If `attributionByGeneration` needs to store string values longer than 32 bytes, the next storage location is generated from a (deterministic) hash. See the [Solidity Docs](https://solidity.readthedocs.io/en/latest/miscellaneous.html#mappings-and-dynamic-arrays) for more information.
 
 ## Low Severity
 
@@ -790,7 +822,7 @@ createTrait(..., [Series.ONE, Series.ONE, Series.ONE], ...);
 
 ##### Description
 
-The current design does not allow for a token owner to atomically control approvals or handlers for individual trait in a single token. The `bool` flag system could be extended to allow for granular trait control based on index. There is limited benefit to tracking traits individually if their functionality as atomic units is restricted.
+The current design does not allow for a token owner to atomically control approvals or handlers for individual trait in a single token. The `bool` flag system could be extended to allow for granular trait control based on index. There is limited benefit to tracking traits individually if they cannot be used as atomic units.
 
 ### L06: upgradeContract() Does Not Check for Null Address
 
@@ -806,7 +838,7 @@ The current design does not allow for a token owner to atomically control approv
 
 ##### Description
 
-It's possible for the `sysAdmin` to accidentally or maliciously set the address of new contract in `upgradeContract()` to `address(0)`.
+It's possible for the `sysAdmin` to accidentally or maliciously set the address of new contract in to `address(0)` when calling the `upgradeContract()` function.
 
 ##### Recommendation
 
@@ -1656,9 +1688,6 @@ This audit incorporates the latest security patterns, best practices, and analys
 
 <img src={placeholder} width="300" alt="placeholder" />
 <img src={token} width="300" alt="token" />
-
-_@note take out dark mode if i can't get svg filters to selectively filter colour properly..._
-
 <svg>
   <defs>
     <filter id="id-of-your-filter">
