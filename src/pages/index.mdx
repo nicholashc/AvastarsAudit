@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -321,7 +321,7 @@ Addressed in [getPrimeByTokenId()](https://github.com/Dapp-Wizards/Avastars-Cont
 
 ### H04: Unchecked Return Call Could Lead to Incorrect Debiting of User Balances
 
-##### Location
+##### Description
 
 [L217](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarPrimeMinter.sol#L217) in the `purchasePrime()` function in AvastarPrimeMinter does not validate the return value of an external call.
 
@@ -779,13 +779,9 @@ Acknowledged. Centralized external validation is part of the application's trust
 
 ### L04: Duplicate Values Possible in Series Array
 
-##### Location
-
-`createTrait()` in TraitFactory.
-
 ##### Description
 
-`createTrait()` accepts inputs that can include duplicate values for the Series\[] array. For example:
+The function `createTrait()` on [L175-L208](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L175-L208) accepts inputs that can include duplicate values for the Series\[] array. For example:
 
 ```solidity
 createTrait(..., [Series.ONE, Series.ONE, Series.ONE], ...);
@@ -797,13 +793,9 @@ Acknowledged. External validation of inputs for permissioned functions is part o
 
 ### L05: traitHandlerByPrimeTokenId Gives a Handler Access to All of a User's Unused Traits
 
-##### Location
-
-`approveTraitAccess()` in AvastarTeleporter.
-
 ##### Description
 
-The current design does not allow for a token owner to atomically control approvals or handlers for individual trait in a single token. The `bool` flag system could be extended to allow for granular trait control based on index. There is limited benefit to tracking traits individually if they cannot be used as atomic units.
+The current design of the function `approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter does not allow for a token owner to atomically control approvals or handlers for individual trait in a single token. The `bool` flag system could be extended to allow for granular trait control based on index. There is limited benefit to tracking traits individually if they cannot be used as atomic units.
 
 ##### Status
 
@@ -811,13 +803,9 @@ Acknowledged. This is the intended functionality. Granular control of trait appr
 
 ### L06: upgradeContract() Does Not Check for Null Address
 
-##### Location
-
-`upgradeContract()` in AccessControl.
-
 ##### Description
 
-It's possible for the `sysAdmin` to accidentally or maliciously set the address of new contract in to `address(0)` when calling the `upgradeContract()` function.
+The function `upgradeContract()` on [L123-L127](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L123-L127) in AccessControl does not check address input. It's possible for the `sysAdmin` to accidentally or maliciously set the address of new contract in to `address(0)` when calling the `upgradeContract()` function.
 
 ##### Recommendation
 
@@ -829,13 +817,9 @@ Addressed.
 
 ### L07: isAvastarTeleporter() and isAvastarMetadata() Checks Are Insufficient
 
-##### Location
-
-L42, AvastarTeleporter, `isAvastarTeleporter()` and L94, AvastarMetadata, `isAvastarMetadata()`
-
 ##### Description
 
-Returning a value as always true provides little assurance that the prospective contract implements the intended functionality. Any contract could add a function by the same name which contained arbitrary logic and still returned true (mitigated somewhat by admin privileges)
+The functions `isAvastarTeleporter()` on [L43](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L43) and `isAvastarMetadata()` on [L94](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarMetadata.sol#L94) are insufficient checks for \"contractness\". Returning a value as always true provides little assurance that the prospective contract implements the intended functionality. Any contract could add a function by the same name which contained arbitrary logic and still returned true (mitigated somewhat by admin privileges).
 
 ##### Recommendation
 
@@ -847,15 +831,11 @@ Acknowledged. The risk of a contract maliciously spoofing the return value is re
 
 ### L08: Tightly Packing Traits Struct Will Save Gas
 
-##### Location
-
-`Trait` struct in AvastarTypes.
-
 ##### Description
 
-Reordering the declaration of variables in the Traits struct will reduce the size of every instance of this struct by one full storage slot. This will save gas and reduce the contract size during deployment. It will also reduce the gas costs when the Traits are added.
+Reordering the declaration of variables in the Trait struct on [L60-L71] in AvastarTypes will reduce the size of every instance of this struct by one full storage slot. This will save gas and reduce the contract size during deployment. It will also reduce the gas costs when the Traits are added.
 
-The struct is initialized as:
+The struct is declared as:
 
 ```solidity
 struct Trait {
@@ -897,13 +877,9 @@ Accepted. The gas cost of `createTrait()` was reduced by approximately 20%.
 
 ### L09: setAttribution() Strings Can Be Set to Null
 
-##### Location
-
-L152, TraitFactory, `setAttribution()`.
-
 ##### Description
 
-It is possible for a `sysAdmin` to accidentally or maliciously set the attribution of a Generation as an empty string
+In the function `setAttribution()` on [152-161](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L152-L161) in TraitFactory, it is possible for a `sysAdmin` to accidentally or maliciously set the attribution of a Generation as an empty string.
 
 ##### Recommendation
 
@@ -915,28 +891,25 @@ Addressed. This function now checks that the length of the input is greater than
 
 ### L10: TraitAccessApproved() Event Does Not Necessarily Reflect State Changes
 
-##### Location
-
-L109, AvastarTeleporter, `TraitAccessApproved()`
-
 ##### Description
 
-The `approveTraitAccess()` function emits the event `TraitAccessApproved()` regardless if any new traits have been approved or changed handlers. It is possible to provide an empty array of `_primeIds` as an argument for this function. It is also possible to provide a set of `_primeIds` that have already been approved to the given handler. In both cases, the event unnecessarily broadcasts when there are no state modifications.
+The `approveTraitAccess()` function on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter emits the event `TraitAccessApproved()` regardless if any new traits have been approved or changed handlers. It is possible to provide an empty array of `_primeIds` as an argument for this function. It is also possible to provide a set of `_primeIds` that have already been approved to the given handler. In both cases, the event unnecessarily broadcasts when there are no state modifications.
+
+##### Status
 
 Addressed. The function will now only complete execution if there is a state change.
 
 ### L11: Functions With Unnecessarily Permissive Visibility
 
-##### Location
-
-- `getPrimeByTokenId()`, `getPrimeReplicationByTokenId()`, `getReplicantByTokenId()` in PrimeFactory
-- `getPrimeByTokenId()`, `getReplicantByTokenId()` in IAvastarTeleporter
-- `pause()`, `unpause()` in AccessControl
-- `tokenURI()` in AvastarTeleporter
-
 ##### Description
 
-These functions are not used internally in a contract and can safely be changed from `public` to `external`.
+The following functions are not used internally in a contract and can safely be changed from `public` to `external`.
+
+- `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102), `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory
+- `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory
+- `getPrimeByTokenId()` on [L49-L59](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/IAvastarTeleporter.sol#L49-L59) and `getReplicantByTokenId()` on [L71-L80](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/IAvastarTeleporter.sol#L71-L80) in IAvastarTeleporter
+- `pause()` on [L159-162](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L159-L162) and `unpause()` on [L167-170](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L167-L170) in AccessControl
+- `tokenURI()` on [L83-L89](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L83-L89) in AvastarTeleporter
 
 ##### Status
 
@@ -966,13 +939,9 @@ Addressed. The core contracts now use solc 0.5.14, which set Istanbul as the def
 
 ### L14: Unnecessary Duplication of Avastar Storage
 
-##### Location
-
-Avastar struct in AvastarTypes.
-
 ##### Description
 
-`Avatar.traits` in never exposed as a public variable and is only used once to check if a hash is not repeated in a generation. `isHashUsedByGeneration` is already validated during `mintPrime()` and `mintReplicant()`. Storing and validating the same hash twice is redundant.
+`Avatar.traits` on [L96](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTypes.sol#L96) in never exposed as a public variable and is only used once to check if a hash is not repeated in a generation. `isHashUsedByGeneration` is already validated during `mintPrime()` and `mintReplicant()`. Storing and validating the same hash twice is redundant.
 
 ##### Status
 
@@ -1002,7 +971,7 @@ Acknowledged. Not within the scope or timeline of this audit.
 
 ### N01: Floating Pragmas
 
-##### Location
+#####
 
 All contracts.
 
@@ -1024,13 +993,9 @@ Addressed in all core contracts, which are now locked to solc version 0.5.14. Th
 
 ### N02: Unused Library Method With External Call
 
-##### Location
-
-OpenZeppelin Address Library.
-
 ##### Description
 
-While unlikely to be accessed, I would not include the code for the `sendValue()` function. A bug allowing unexpected `JUMPs` might lead to the execution of the low-level `call.value()` in this function.
+While unlikely to be accessed, I would not include the code for the `sendValue()` function on [L61-L67](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/utils/Address.sol#L61-L67) in the OpenZeppelin Address library. A bug allowing unexpected `JUMPs` might lead to the execution of the low-level `call.value()` in this function.
 
 ##### Status
 
@@ -1038,13 +1003,9 @@ Acknowledged with a request for further discussion. In general, I do not recomme
 
 ### N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future
 
-##### Location
-
-`strConcat()` in AvastarBase
-
 ##### Description
 
-This function uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with a hash, its output can produce collisions.
+The function `strConcat()` on [L42-L46](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarBase.sol#L42-L46) in AvastarBase uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with a hash, its output can produce collisions.
 
 ##### Status
 
@@ -1052,13 +1013,9 @@ Acknowledged with a request for clarification. This is an informational note abo
 
 ### N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types
 
-##### Location
-
-L249, TraitFactory, `assembleArtwork()`.
-
 ##### Description
 
-Solidity used to have a bug that produced unexpected values when small types were used in exponentiation. The resulting type of an exponentiation of two different sized types is the type of the base. It used to be the smallest type that can hold both the type of the base and the type of the exponent.
+The function `assembleArtwork()` in TraitFactory relies on exponentiation of mixed uint types on [L249](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L249). Solidity used to have a bug that produced unexpected values when small types were used in exponentiation. The resulting type of an exponentiation of two different sized types is the type of the base. It used to be the smallest type that can hold both the type of the base and the type of the exponent.
 
 ##### Status
 
