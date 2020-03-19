@@ -22,7 +22,7 @@ export default Layout;
 # Avastars Smart Contract Audit Report
 
 v0.3.0<br />
-16 March 2020<br />
+19 March 2020<br />
 [@nicholashc](https://github.com/nicholashc)<br />
 
 ---
@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -733,48 +733,39 @@ Mappings use a hash function to generate the starting position of their storage 
 
 ### L01: Out of Bounds Enum Inputs Can Trigger Invalid Opcode
 
-##### Status
-
-> 01/28/20
-> The Avastars team has decided that the impact of this issue does not necessitate the substantial refactoring required. This issue was originally reported in the 12/01/20 Preliminary Assessment.
-
-##### Location
-
-Every function that accepts an enum as input, including:
-
-- `getTraitIdByGenerationGeneAndVariation()`, `getAttributionByGeneration()`, `setAttribution()` and `createTrait()` in TraitFactory
-- `getPrimeByGenerationAndSerial()` and `mintPrime()` in PrimeFactory
-- `getReplicantByGenerationAndSerial()` and `mintReplicant()` in ReplicantFactory
-- `setCurrentGeneration()`, `setCurrentSeries()` and `purchasePrime()` in AvastarPrimeMinter
-- `assembleTraitMetadata()` in AvastarMetadata
-
 ##### Description
 
-When used as a function argument, an out-of-range value of an enum type triggers an `INVALID` opcode. This is an assert-style exception that burns all of the gas in the transactions. In general, this type of exception should never happen in production code. The `REVERT` opcode provides the same assurances with an additional error message. And without burning all the gas in a transaction.
+When used as an argument in the following function, an out-of-range `enum` value triggers an `INVALID` opcode.
+
+- `getTraitIdByGenerationGeneAndVariation()` on [L43-L54](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/TraitFactory.sol#L43-L54), `getAttributionByGeneration()` on [L125-136](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/TraitFactory.sol#L125-L136), `setAttribution()` on [L162-L171](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/TraitFactory.sol#L162-L171) and `createTrait()` on [L185-L223](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/TraitFactory.sol#L185-L223) in TraitFactory
+- `getPrimeByGenerationAndSerial()` on [L43-L65](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/PrimeFactory.sol#L43-L65) and `mintPrime()` on [L138-L177](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/PrimeFactory.sol#L138-L177) in PrimeFactory
+- `getReplicantByGenerationAndSerial()` on [L32-L52](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/ReplicantFactory.sol#L32-L52) and `mintReplicant()` on [L99-L129](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/ReplicantFactory.sol#L99-L129) in ReplicantFactory
+- `setCurrentGeneration()` on [L101-L105](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L101-L105), `setCurrentSeries()` on [L113-L116](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L113-L116) and `purchasePrime()` on [L200-L220](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L200-L220) in AvastarPrimeMinter
+- `assembleTraitMetadata()` on [L315-L376](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarMetadata.sol#L315-L376) in AvastarMetadata
+
+This is an assert-style exception that burns all of the gas in the transactions. In general, this type of exception should never happen in production code. The `REVERT` opcode provides the same assurances with the option of including an additional error message if used with `require()`. The `REVERT` opcode does not burn all remaining gas sent with transaction.
 
 ##### Recommendation
 
-I still recommend adding explicit validation for any input with an enum type in non-admin functions. While not worth refactoring the full code base, heavy use of the enum type is likely creating more complexity than it is clarity.
-
-### L02: State Access in Event Emitted After External Call
+I recommend adding explicit validation for any input with an enum type in non-admin functions. While this needs to be balanced against the effort of refactoring the full code base, heavy use of the enum type is likely creating more complexity than it is clarity.
 
 ##### Status
 
-> 05/02/20
->
-> Addressed. The event no longer accesses mutable state after the external `transfer` call. There remains a very small risk of reentrancy with the post-Istanbul opcode gas pricing. See [OpenZeppelin's recommendations](https://blog.openzeppelin.com/reentrancy-after-istanbul/) on avoiding `transfer` for more information.
+The Avastars Team has decided that the impact of this issue does not necessitate the substantial refactoring required.
 
-##### Location
-
-`withdrawDepositorBalance()` in PrimeMinter.
+### L02: State Access in Event Emitted After External Call
 
 ##### Description
 
-An external `transfer` call is sent to an unknown address before the function accesses state and finishes execution. Accessing state after an untrusted external call brings potential risk for reentrancy, particularly now that `transfer` is able to trigger code execution with the updated storage opcode costs. If the call fails incorrect data might be logged in the event.
+In `withdrawDepositorBalance()` on [L175-L184](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L175-L184) in AvastarPrimeMinter, state access occurs after an external `transfer` call an arbitrary address. Accessing state after an untrusted external call brings potential risk for reentrancy, particularly now that `transfer` is able to trigger code execution with the updated storage opcode costs. If the call fails incorrect data might be logged in the event.
 
 ##### Recommendation
 
 Emit the local variable `depositorBalance` rather than accessing state with `depositsByAddress[msg.sender]`.
+
+##### Status
+
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarPrimeMinter.sol#L196). The event no longer accesses mutable state after the external `transfer` call. There remains a very small risk of reentrancy with the post-Istanbul opcode gas pricing. See [OpenZeppelin's recommendations](https://blog.openzeppelin.com/reentrancy-after-istanbul/) on avoiding `transfer` for more information.
 
 ### L03: Trait Hashes Rely on External Validation
 
