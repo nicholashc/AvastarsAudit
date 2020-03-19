@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -769,23 +769,15 @@ Emit the local variable `depositorBalance` rather than accessing state with `dep
 
 ### L03: Trait Hashes Rely on External Validation
 
-##### Status
-
-> 05/02/20
->
-> Acknowledged. Centralized external validation is part of the application's trust model.
-
 ##### Description
 
 Ensuring that each avastar has a trait hash that corresponds with valid traits happens entirely off-chain. The functions `assembleTraitMetadata()` and `renderAvastar()` have no mechanism for parsing invalid genes other than omitting them. Not all hashes produce valid Avastars. The application relies on an external validation systems and is not enforced at the smart contract level.
 
-### L04: Duplicate Values Possible in Series Array
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. External validation of inputs for permissioned functions is part of the application's trust model.
+Acknowledged. Centralized external validation is part of the application's trust model.
+
+### L04: Duplicate Values Possible in Series Array
 
 ##### Location
 
@@ -799,13 +791,11 @@ Ensuring that each avastar has a trait hash that corresponds with valid traits h
 createTrait(..., [Series.ONE, Series.ONE, Series.ONE], ...);
 ```
 
-### L05: traitHandlerByPrimeTokenId Gives a Handler Access to All of a User's Unused Traits
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. This is the intended functionality. Granular control of trait approval is beyond the scope of this feature.
+Acknowledged. External validation of inputs for permissioned functions is part of the application's trust model.
+
+### L05: traitHandlerByPrimeTokenId Gives a Handler Access to All of a User's Unused Traits
 
 ##### Location
 
@@ -815,13 +805,11 @@ createTrait(..., [Series.ONE, Series.ONE, Series.ONE], ...);
 
 The current design does not allow for a token owner to atomically control approvals or handlers for individual trait in a single token. The `bool` flag system could be extended to allow for granular trait control based on index. There is limited benefit to tracking traits individually if they cannot be used as atomic units.
 
-### L06: upgradeContract() Does Not Check for Null Address
-
 ##### Status
 
-> 05/02/20
->
-> Addressed.
+Acknowledged. This is the intended functionality. Granular control of trait approval is beyond the scope of this feature.
+
+### L06: upgradeContract() Does Not Check for Null Address
 
 ##### Location
 
@@ -835,13 +823,11 @@ It's possible for the `sysAdmin` to accidentally or maliciously set the address 
 
 This should be explicitly disallowed.
 
-### L07: isAvastarTeleporter() and isAvastarMetadata() Checks Are Insufficient
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. The risk of a contract maliciously spoofing the return value is reduced by the application's trust model. More robust interface checks are beyond the scope of this version of the contracts.
+Addressed.
+
+### L07: isAvastarTeleporter() and isAvastarMetadata() Checks Are Insufficient
 
 ##### Location
 
@@ -855,13 +841,11 @@ Returning a value as always true provides little assurance that the prospective 
 
 These contracts could register their interfaces in the ERC-165 registry and perform much more robust interface checks.
 
-### L08: Tightly Packing Traits Struct Will Save Gas
-
 ##### Status
 
-> 05/02/20
->
-> Accepted. The gas cost of `createTrait()` was reduced by approximately 20%.
+Acknowledged. The risk of a contract maliciously spoofing the return value is reduced by the application's trust model. More robust interface checks are beyond the scope of this version of the contracts.
+
+### L08: Tightly Packing Traits Struct Will Save Gas
 
 ##### Location
 
@@ -907,13 +891,11 @@ struct Trait {
 
 <img src={storage_layout} width="1200" alt="storage_layout" />
 
-### L09: setAttribution() Strings Can Be Set to Null
-
 ##### Status
 
-> 05/02/20
->
-> Addressed. This function now checks that the length of the input is greater than 0.
+Accepted. The gas cost of `createTrait()` was reduced by approximately 20%.
+
+### L09: setAttribution() Strings Can Be Set to Null
 
 ##### Location
 
@@ -927,13 +909,11 @@ It is possible for a `sysAdmin` to accidentally or maliciously set the attributi
 
 Check that the length of `_artist` and `_infoURI` is > 0.
 
-### L10: TraitAccessApproved() Event Does Not Necessarily Reflect State Changes
-
 ##### Status
 
-> 05/02/20
->
-> Addressed. The function will now only complete execution if there is a state change.
+Addressed. This function now checks that the length of the input is greater than 0.
+
+### L10: TraitAccessApproved() Event Does Not Necessarily Reflect State Changes
 
 ##### Location
 
@@ -943,13 +923,9 @@ L109, AvastarTeleporter, `TraitAccessApproved()`
 
 The `approveTraitAccess()` function emits the event `TraitAccessApproved()` regardless if any new traits have been approved or changed handlers. It is possible to provide an empty array of `_primeIds` as an argument for this function. It is also possible to provide a set of `_primeIds` that have already been approved to the given handler. In both cases, the event unnecessarily broadcasts when there are no state modifications.
 
+Addressed. The function will now only complete execution if there is a state change.
+
 ### L11: Functions With Unnecessarily Permissive Visibility
-
-##### Status
-
-> 05/02/20
->
-> Addressed. Visibility changed to `external` on all 8 recommended functions.
 
 ##### Location
 
@@ -962,13 +938,11 @@ The `approveTraitAccess()` function emits the event `TraitAccessApproved()` rega
 
 These functions are not used internally in a contract and can safely be changed from `public` to `external`.
 
-### L12: Limited Unit Test Coverage of Token Dependencies and Certain Branches of the Core Contracts
-
 ##### Status
 
-> 05/02/20
->
-> Improved. Unit test coverage improved in areas identified in the audit and in general. Improving coverage for other under-tested functionality like token approval and transfer is a goal.
+Addressed. Visibility changed to `external` on all 8 recommended functions.
+
+### L12: Limited Unit Test Coverage of Token Dependencies and Certain Branches of the Core Contracts
 
 ##### Description
 
@@ -976,25 +950,21 @@ See [Test Coverage][#a02-test-coverage] section in the Appendix for more detail.
 
 A significant percentage of the branches in AvastarPrimeMinter, AvastarTeleporter, PrimeFactory, ReplicantFactory, TraitFactory have limited or no unit test coverage. Large parts of the inherited token functionality are not covered by tests. Testing the interactions of the OpenZeppelin and Avastars base contracts may uncover bugs not present in common implementations of the standard ERC-721 contracts.
 
-### L13: Default Truffle Project Settings Targets Outdated Evm Version
-
 ##### Status
 
-> 05/02/20
->
-> Addressed. The core contracts now use solc 0.5.14, which set Istanbul as the default evmVersion. This change is confirmed in the contract build artifacts.
+Improved. Unit test coverage improved in areas identified in the audit and in general. Improving coverage for other under-tested functionality like token approval and transfer is a goal.
+
+### L13: Default Truffle Project Settings Targets Outdated Evm Version
 
 ##### Description
 
 By default, the 0.5.12 solc compiler targets the `petersburg` evmVersion. Using the new opcodes and updated gas pricing available in the `istanbul` evmVersion will better replicate current conditions of the main net. The default evmVersion was changed to `istanbul` in solc 0.5.14. (Note: while Berlin is the most recent evmVersion available it is still considered experimental).
 
-### L14: Unnecessary Duplication of Avastar Storage
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. This is a potential optimization and does not pose a security risk.
+Addressed. The core contracts now use solc 0.5.14, which set Istanbul as the default evmVersion. This change is confirmed in the contract build artifacts.
+
+### L14: Unnecessary Duplication of Avastar Storage
 
 ##### Location
 
@@ -1004,38 +974,33 @@ Avastar struct in AvastarTypes.
 
 `Avatar.traits` in never exposed as a public variable and is only used once to check if a hash is not repeated in a generation. `isHashUsedByGeneration` is already validated during `mintPrime()` and `mintReplicant()`. Storing and validating the same hash twice is redundant.
 
-### L15: Inconsistent Use of uint Alias
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. This is primarily a style note. The main risk of this item comes from potential human error during development. For example, overlooking an implicit conversion or type casting when a variable is changed or moved.
+Acknowledged. This is a potential optimization and does not pose a security risk.
+
+### L15: Inconsistent Use of uint Alias
 
 ##### Description
 
 In various parts of the code base variables are declared with the `uint` alias. They should be replaced in favour of explicit types to avoid confusion and unintentional implicit type conversion.
 
-### L16: AvastarReplicantMinter Contract Not Available
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. Not within the scope or timeline of this audit.
+Acknowledged. This is primarily a style note. The main risk of this item comes from potential human error during development. For example, overlooking an implicit conversion or type casting when a variable is changed or moved.
+
+### L16: AvastarReplicantMinter Contract Not Available
 
 ##### Description
 
 At the time of the audit the AvastarReplicantMinter contract was not available for review. The interactions of Replicants with the other components of the system may introduce new attack surfaces or create scenarios where benign bugs become security risks.
 
+##### Status
+
+Acknowledged. Not within the scope or timeline of this audit.
+
 ## Note
 
 ### N01: Floating Pragmas
-
-##### Status
-
-> 05/02/20
-> Addressed in all core contracts, which are now locked to solc version 0.5.14. The OpenZeppelin dependencies still use floating pragmas with either ^0.5.0 or ^0.5.5.
 
 ##### Location
 
@@ -1053,12 +1018,11 @@ pragma solidity 0.5.12;
 pragma solidity ^0.5.12;
 ```
 
-### N02: Unused Library Method With External Call
-
 ##### Status
 
-> 05/02/20
-> Acknowledged with a request for further discussion. In general, I do not recommend modifying OpenZeppelin dependencies. However, this particular function is a very recent addition to the library and is not battle-tested like the majority of their code base. There is a very small risk that unexpected behaviour in another part of the contract could jump to and/or trigger the execution of this function. This is purely hypothetical, however, and very unlikely. The potential risk is further reduced by the fact that AvastarTeleporter is not designed to hold ether.
+Addressed in all core contracts, which are now locked to solc version 0.5.14. The OpenZeppelin dependencies still use floating pragmas with either ^0.5.0 or ^0.5.5.
+
+### N02: Unused Library Method With External Call
 
 ##### Location
 
@@ -1068,13 +1032,11 @@ OpenZeppelin Address Library.
 
 While unlikely to be accessed, I would not include the code for the `sendValue()` function. A bug allowing unexpected `JUMPs` might lead to the execution of the low-level `call.value()` in this function.
 
-### N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged with a request for clarification. This is an informational note about a recently discovered bug related to combining dynamic data types with `abi.encodePacked()`. See [SWC-133](https://swcregistry.io/docs/SWC-133) for more information. The current Avastars code is not at risk. However, it uses a pattern close enough to the vulnerable example that a warning is warranted. There is only a risk if the `strConcat()` function is adapted or extended in future updates and used to generate hashes or perform validations.
+Acknowledged with a request for further discussion. In general, I do not recommend modifying OpenZeppelin dependencies. However, this particular function is a very recent addition to the library and is not battle-tested like the majority of their code base. There is a very small risk that unexpected behaviour in another part of the contract could jump to and/or trigger the execution of this function. This is purely hypothetical, however, and very unlikely. The potential risk is further reduced by the fact that AvastarTeleporter is not designed to hold ether.
+
+### N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future
 
 ##### Location
 
@@ -1084,13 +1046,11 @@ While unlikely to be accessed, I would not include the code for the `sendValue()
 
 This function uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with a hash, its output can produce collisions.
 
-### N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. This was an informational note about Solidity's recent history with serious bugs and changing behaviour in mixed type exponentiation.
+Acknowledged with a request for clarification. This is an informational note about a recently discovered bug related to combining dynamic data types with `abi.encodePacked()`. See [SWC-133](https://swcregistry.io/docs/SWC-133) for more information. The current Avastars code is not at risk. However, it uses a pattern close enough to the vulnerable example that a warning is warranted. There is only a risk if the `strConcat()` function is adapted or extended in future updates and used to generate hashes or perform validations.
+
+### N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types
 
 ##### Location
 
@@ -1100,27 +1060,23 @@ L249, TraitFactory, `assembleArtwork()`.
 
 Solidity used to have a bug that produced unexpected values when small types were used in exponentiation. The resulting type of an exponentiation of two different sized types is the type of the base. It used to be the smallest type that can hold both the type of the base and the type of the exponent.
 
-### N05: AvastarPrimeMinter Should Set Teleporter Contract in Constructor
-
 ##### Status
 
-> 05/02/20
->
-> Addressed.
+Acknowledged. This was an informational note about Solidity's recent history with serious bugs and changing behaviour in mixed type exponentiation.
+
+### N05: AvastarPrimeMinter Should Set Teleporter Contract in Constructor
 
 ##### Description
 
 This would be consistent with how the AvastarTeleporter address is set in the Metadata contract.
 
-### N06: Set Short Circuits With Mostly Likely Case First
-
 ##### Status
 
-> 05/02/20
->
-> Addressed.
->
-> ##### Description
+Addressed.
+
+### N06: Set Short Circuits With Mostly Likely Case First
+
+##### Description
 
 When two conditions are evaluated, position the one that will most frequently fail first to reduce overall gas costs.
 
@@ -1138,63 +1094,55 @@ if (_series == Series.PROMO) {
 
 In this example from `mintPrimes()` the if / else statements could flip.
 
-### N07: State Variable Initialized With Default Value
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. In this example, the redundant declaration of the default value improves the clarity and readability of the code.
+Addressed.
+
+### N07: State Variable Initialized With Default Value
 
 ##### Description
 
 On L64 of AccessControl a state variable is unnecessarily initialized with its default value (false / 0).
 
+```solidity
     bool public upgraded = false;
-
-### N08: Test Coverage Treats Invalid Execution States as Passing Conditions
+```
 
 ##### Status
 
-> 05/02/20
->
-> Acknowledged as part of L01.
+Acknowledged. In this example, the redundant declaration of the default value improves the clarity and readability of the code.
+
+### N08: Test Coverage Treats Invalid Execution States as Passing Conditions
 
 ##### Description
 
 This is connected to the Enum validation issue. As a best practice, `Invalid` execution states should not be the intended outcome of a test.
 
-### N09: Event Parameters Are Not Indexed
-
 ##### Status
 
-> 05/02/20
->
-> Auditor error. There are in four events which use the `indexed` keyword. This issue is retracted.
+Acknowledged as part of L01.
+
+### N09: Event Parameters Are Not Indexed
 
 ##### Description
 
 No events in the code base take advance of the `indexed` keyword that allows for easier data retrieval from events.
 
-### N10: Empty Events Are Emitted
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. Empty events still offer the ability to subscribe to and filter on-chain activity.
+Auditor error. There are in four events which use the `indexed` keyword. This issue is retracted.
+
+### N10: Empty Events Are Emitted
 
 ##### Description
 
 `ContractPaused()` and `ContractUnpaused()` in AccessControl are empty. They could contain the address of the caller or other relevant data.
 
-### N11: Unnecessary Casting to Own Type
-
 ##### Status
 
-> 05/02/20
->
-> Partially addressed. The `serial` variables in the 2nd list item were updated. The `uint256(address(this).balance` examples are unchanged.
+Acknowledged. Empty events still offer the ability to subscribe to and filter on-chain activity.
+
+### N11: Unnecessary Casting to Own Type
 
 ##### Description
 
@@ -1203,37 +1151,39 @@ There are several instances of unnecessary type casting:
 - `checkFranchiseBalance()` and `withdrawFranchiseBalance()` do not need cast `uint256(address(this).balance)` as it is already of that type
 - `getPrimeByGenerationAndSerial()`, `renderAvastar()`, `getPrimeByTokenId()`, `getPrimeReplicationByTokenId()`, `getReplicantByTokenId()`, `mintAvastar()` all accept a `uint256` value for `serial` and then cast it again as `uint256`
 
-### N12: Unattributed Use of an External Dependency
-
 ##### Status
 
-> 05/02/20
->
-> Addressed.
+Partially addressed. The `serial` variables in the 2nd list item were updated. The `uint256(address(this).balance` examples are unchanged.
+
+### N12: Unattributed Use of an External Dependency
 
 ##### Description
 
 The `uintToStr()` function in AvastarBase is included without attribution. The version used appears to come from Oracalize. An updated version is part of the OpenZeppelin contracts as Strings.sol. Both contracts require reproduction with a license.
 
-### N13: Variable Shadowing
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. While this is primarily an informational note, variable shadowing can produce issues beyond readability or developer error. The primary risk of naming conflicts is unexpected and/or undocumented behaviour in the compiler, particular in contracts with multiple levels of inheritance and nested constructor arguments. See [SWC-119](https://swcregistry.io/docs/SWC-119) and this [Solidity GitHub issue](https://github.com/ethereum/solidity/issues/2563) for more info.
+Addressed.
+
+### N13: Variable Shadowing
 
 ##### Description
 
 The state variables Traits, `name`, `symbol`, and `_name` are shadowed in multiple places in the contract structure.
 
+##### Status
+
+Acknowledged. While this is primarily an informational note, variable shadowing can produce issues beyond readability or developer error. The primary risk of naming conflicts is unexpected and/or undocumented behaviour in the compiler, particular in contracts with multiple levels of inheritance and nested constructor arguments. See [SWC-119](https://swcregistry.io/docs/SWC-119) and this [Solidity GitHub issue](https://github.com/ethereum/solidity/issues/2563) for more info.
+
 ### N14: External Calls in Loops
+
+##### Description
+
+`assembleTraitMetadata()` makes an external call in each iteration of a for loop.
 
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. This item is primarily informational and does not pose a significant security risk. In this case, the number of calls adds significant gas overhead. The following recommendations are meant to clarify the original note and are not realistic to incorporate before the contract goes lives.
+Acknowledged. This item is primarily informational and does not pose a significant security risk. In this case, the number of calls adds significant gas overhead. The following recommendations are meant to clarify the original note and are not realistic to incorporate before the contract goes lives.
 
 Selectively batching calls from AvastarMetadata to AvastarTeleporter can substantially reduce the total number of calls required. For example, the Metadata contract is expected to make _30_ calls to AvastarTeleporter during the normal execution of a single invocation of `getAvastarMetadata()`. While some repetition is necessary, there are at least three opportunities for optimization.
 
@@ -1253,17 +1203,7 @@ Selectively batching calls from AvastarMetadata to AvastarTeleporter can substan
 
 AvastarTeleporter could have a single function that returns both the `name` and `traitId`, accessed by generation, gene, and variation.
 
-##### Description
-
-`assembleTraitMetadata()` makes an external call in each iteration of a for loop.
-
 ### N15: Unnecessary Validation
-
-##### Status
-
-> 05/02/20
->
-> Mostly addressed. `require(msg.sender != address(0))` has been [removed](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/298e38ad4c169b0fa1142fec5938c90450cc402b#diff-b7b364011b2d057b016161e4d21a0a98). Some of the duplicated validation between `purchasePrime()` and `mintPrime()` has been removed. There is still an opportunity to funnel all minting through the PrimeMinter, even the promos. This would eliminate the need for duplicating code in both contracts.
 
 ##### Description
 
@@ -1273,54 +1213,50 @@ require(msg.sender != address(0));
 
 Is unnecessary as `msg.sender` can never be 0. This is present in AvastarPrimeMinter [L152](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L152), [L164](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L164), [L176](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L176)
 
-- Validating the same inputs in both `purchasePrime()` and `mintPrime()` is redundant. Consider making all new mint calls flow through a single path to reduce the overhead of revalidation
+##### Recommendation
 
-### N16: Redundant and/or Duplicated Code
+Validating the same inputs in both `purchasePrime()` and `mintPrime()` is redundant. Consider making all new mint calls flow through a single path to reduce the overhead of revalidation
 
 ##### Status
 
-> 05/02/20
->
-> Addressed in some cases. This is a very minor optimization that could be implemented in functions throughout the code base.
+Mostly addressed. `require(msg.sender != address(0))` has been [removed](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/298e38ad4c169b0fa1142fec5938c90450cc402b#diff-b7b364011b2d057b016161e4d21a0a98). Some of the duplicated validation between `purchasePrime()` and `mintPrime()` has been removed. There is still an opportunity to funnel all minting through the PrimeMinter, even the promos. This would eliminate the need for duplicating code in both contracts.
+
+### N16: Redundant and/or Duplicated Code
 
 ##### Description
 
 - `metadataContractAddress` on [L37](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L37) can be declared public and automatically produce a getter function. This would remove the need for the redundant `getMetadataContractAddress()` on [L71-L75](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L71-L75) function
 - Many functions repeatedly downcast inputs rather than storing them as local memory variables. If this type of type conversion is needed more than once during execution it can be stored locally. Repeating the down-casting adds gas for each repetition and reduces code readability
 
-### N17: Benign Reentrancy in safeTransferFrom()
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. The risks of modifying dependencies and/or breaking established standards are likely greater than the risk from this hypothetical edge case.
+Addressed in some cases. This is a very minor optimization that could be implemented in functions throughout the code base.
+
+### N17: Benign Reentrancy in safeTransferFrom()
 
 ##### Description
 
 It's possible for the external call in the `safeTransferFrom()` on [L334](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol#L334) ERC-721 interface check to trigger reentrancy in a specific edge case. This requires that malicious craft a function signature collision with `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`. The signature of this function is `0x150b7a02`. An example of a valid colliding signature is `bytes4(keccak256("$$$_10284c80_$$$()"))`. If a contract with the later function is called with 0 ether value, it executes as a direct method `CALL` and can pass an arbitrary amount of gas. It does not execute as a `STATICCALL`. If this malicious function returns `0x150b7a02` at the end of execution it can execute arbitrary logic, including reentrancy in the interim.
 
-### N18: TraitsUsed() Event Emits the Full Array in All Cases
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged. This is expected behaviour as it preserves the correct order of traits provided as input. Accessing or parsing by index is out of scope for the goals of this feature.
+Acknowledged. The risks of modifying dependencies and/or breaking established standards are likely greater than the risk from this hypothetical edge case.
+
+### N18: TraitsUsed() Event Emits the Full Array in All Cases
 
 ##### Description
 
 `useTraits()` requires at least one trait to change states in order for the function to reach the `TraitsUsed()` event. However, this function emits the full `prime.replicated` array without indicating which entries reflect state changes.
 
-I recommend creating a new array in memory and tracking the traits used by index. The event can then emit a smaller set of traits who've states have changed.
+##### Recommendation
 
-### N19: Inconsistencies With Official Solidity Style Recommendations
+I recommend creating a new array in memory and tracking the traits used by index. The event can then emit a smaller set of traits who've states have changed.
 
 ##### Status
 
-> 05/02/20
->
-> Acknowledged.
+Acknowledged. This is expected behaviour as it preserves the correct order of traits provided as input. Accessing or parsing by index is out of scope for the goals of this feature.
+
+### N19: Inconsistencies With Official Solidity Style Recommendations
 
 ##### Description
 
@@ -1340,25 +1276,21 @@ function extendTraitArt(uint256 _traitId, string calldata _svg)
 }
 ```
 
-### N20: Comment Refers to Incorrect Event
-
 ##### Status
 
-> 05/02/20
->
-> [Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L48)
+Acknowledged.
+
+### N20: Comment Refers to Incorrect Event
 
 ##### Description
 
 A comment on [L48](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarTeleporter.sol#L48) of AvastarTeleporter incorrectly refers to the `TeleporterContractSet()` event being emitted when the function emits the event `MetadataContractAddressSet()`.
 
-### N21: Hard-Coded Limited in for Loop Is Not Future-Proof
-
 ##### Status
 
-> 05/02/20
->
-> Acknowledged.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L48)
+
+### N21: Hard-Coded Limited in for Loop Is Not Future-Proof
 
 ##### Description
 
@@ -1368,13 +1300,11 @@ A comment on [L48](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95
 for (uint8 slot = 0; slot <= uint8(Gene.HAIR_STYLE); slot++){...}
 ```
 
-### N22: Unnecessary Inheritance
-
 ##### Status
 
-> 05/02/20
->
-> This is a new informational note and was not previously in the report. There are several cases where entire inherited libraries are unused.
+Acknowledged.
+
+### N22: Unnecessary Inheritance
 
 No contract in the AvastarMetadata inheritance structure uses the SafeMath Library. It is inherited in AccessControl on [L13-L14](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol#L13-L14). However, neither AccessControl nor any of the contracts which inherit it use the library
 
@@ -1384,6 +1314,10 @@ using SafeMath for uint16;
 ```
 
 PrimeMinter uses SafeMath. However, it should declare it at the appropriate point and with the appropriate specificity for its use. A better location for declaring the library is at the start of AvastarPrimeMinter for `uint256` only. Several OpenZeppelin dependencies in AvastarTeleporter reference and use SafeMath. However, none of the core contracts use it. In all cases, the SafeMath declarations can be removed from AccessControl.
+
+##### Status
+
+This is a new informational note and was not previously included the full audit report. There are several cases where entire inherited libraries are unused.
 
 ## Appendix
 
@@ -1569,16 +1503,14 @@ These issues have a reduced impact on security
 | Date     | Description                                 | Version | Commit                                                                                                        |
 | :------- | :------------------------------------------ | :------ | :------------------------------------------------------------------------------------------------------------ |
 | 05/03/20 | Avastars Smart Contract Audit Public Report | 0.3.0   | N/A                                                                                                           |
-| 05/02/20 | Post-Audit Follow Up Report                 | 0.2.0   | [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842) |
+| 05/19/20 | Post-Audit Follow Up Report                 | 0.2.0   | [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842) |
 | 28/01/20 | Avastars Smart Contract Audit Full Report   | 0.1.0   | [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea) |
 | 12/01/20 | Preliminary Assessment                      | N/A     | [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) |
 | 09/15/19 | On-Chain Storage Cost Feasibility Report    | N/A     | N/A                                                                                                           |
 
 ### A06: Onchain Storage Cost Recommendations
 
-@note update to make sense in context of current report...
-
-Key points:
+The following comments were part of an initial feasibility analysis from 09/15/19. It investigates the viability of storing large amounts of data (like svg layers) on-chain.
 
 1. Storing unoptimized full svg data, especially with xml tags, is expensive.In some cases, complex images may even exceed the Ethereum block limit.
 2. Optimized code run through svgo reduces this cost by ~30%.
