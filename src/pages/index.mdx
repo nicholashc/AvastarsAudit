@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -1115,8 +1115,11 @@ Acknowledged. Empty events still offer the ability to subscribe to and filter on
 
 There are several instances of unnecessary type casting:
 
-- `checkFranchiseBalance()` and `withdrawFranchiseBalance()` do not need cast `uint256(address(this).balance)` as it is already of that type
-- `getPrimeByGenerationAndSerial()`, `renderAvastar()`, `getPrimeByTokenId()`, `getPrimeReplicationByTokenId()`, `getReplicantByTokenId()`, `mintAvastar()` all accept a `uint256` value for `serial` and then cast it again as `uint256`
+- `checkFranchiseBalance()` on [L124-L126](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L124-L126) and `withdrawFranchiseBalance()` on [L135-L141](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L135-L141) of AvastarPrimeMinter do not need cast `uint256(address(this).balance)` as it is already of the `uint256` type
+- The following functions all accept a `uint256` value for `serial` and then explicitly recast it as `uint256`:
+  - `renderAvastar()` on [L86-L96](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarFactory.sol#L86-L96) of AvastarFactory, -`getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102), `getPrimeByGenerationAndSerial()` on [L43-L65](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L43-L65), and `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory
+  - `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) of ReplicantFactory
+  - `mintAvastar()` on [L26-L66](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarFactory.sol#L26-L66) in AvastarFactory
 
 ##### Status
 
@@ -1126,11 +1129,11 @@ Partially addressed. The `serial` variables in the 2nd list item were updated. T
 
 ##### Description
 
-The `uintToStr()` function in AvastarBase is included without attribution. The version used appears to come from Oracalize. An updated version is part of the OpenZeppelin contracts as Strings.sol. Both contracts require reproduction with a license.
+The `uintToStr()` function in AvastarBase is included without attribution. The version used appears to originally come from Oracalize. An updated version is part of the OpenZeppelin contracts as Strings.sol. Both contracts require reproduction with a license.
 
 ##### Status
 
-Addressed.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarBase.sol#L12-L13).
 
 ### N13: Variable Shadowing
 
@@ -1146,13 +1149,13 @@ Acknowledged. While this is primarily an informational note, variable shadowing 
 
 ##### Description
 
-`assembleTraitMetadata()` makes an external call in each iteration of a for loop.
+The function `assembleTraitMetadata()` on [L319-L380] in AvastarMetadata makes an external call in each iteration of a for loop.
 
 ##### Status
 
-Acknowledged. This item is primarily informational and does not pose a significant security risk. In this case, the number of calls adds significant gas overhead. The following recommendations are meant to clarify the original note and are not realistic to incorporate before the contract goes lives.
+Acknowledged. This item is primarily informational and does not pose a significant security risk. In this case, however, the number of calls adds significant gas overhead. The following recommendations are meant to clarify the original note but the substaintial refactoring required is realistic to incorporate before the contract goes lives.
 
-Selectively batching calls from AvastarMetadata to AvastarTeleporter can substantially reduce the total number of calls required. For example, the Metadata contract is expected to make _30_ calls to AvastarTeleporter during the normal execution of a single invocation of `getAvastarMetadata()`. While some repetition is necessary, there are at least three opportunities for optimization.
+Selectively batching calls from AvastarMetadata to AvastarTeleporter can substantially reduce the total number of calls required. For example, the AvastarMetadata contract is expected to make 30 independant calls to AvastarTeleporter during the normal execution of a single invocation of `getAvastarMetadata()`. While some repetition is necessary with this design pattern, there are at least three opportunities for optimization.
 
 1.  `getAvastarMetadata()` checks that `_uint256 is a valid token` 4 times, each making a separate call to AvastarTeleporter.
 
@@ -1161,14 +1164,14 @@ Selectively batching calls from AvastarMetadata to AvastarTeleporter can substan
 - [L247](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L247): `viewURI(_tokenId)` checks `totalSupply()` again
 - [L279](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L279): `mediaURI(_tokenId)` checks `totalSupply()` again
 
-2.  An [initial call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L233) is made to get `Avastar.wave`. Based on the result, a [separate call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L236-L240) then retrieves either a Prime or Replicant struct. If the Avastar struct stored Series, Gender and `ranking` (only 3 additional bytes combined) all of the necessary information could be returned in one call. These additional values could be tightly packed into unused space in the Avastar struct.
+2.  An [initial call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L233) is made to get `Avastar.wave`. Based on the result, a [separate call](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L236-L240) then retrieves either a Prime or Replicant struct. If the Avastar struct stored Series, Gender and `ranking`, all of the necessary information could be returned in one call. These additional values could be tightly packed into unused space in the Avastar struct as they each only require a single byte of storage.
 
 3.  Each of 12 traits in the loop makes 2 external calls.
 
 - [L371](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L371): `traitId = teleporterContract.getTraitIdByGenerationGeneAndVariation(_generation, Gene(slot), uint8(variation))`
 - [L401](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L401) `teleporterContract.getTraitNameById(traitId)`.
 
-AvastarTeleporter could have a single function that returns both the `name` and `traitId`, accessed by generation, gene, and variation.
+AvastarTeleporter could instead have a single function that returns both the `name` and `traitId`, accessed by generation, gene, and variation.
 
 ### N15: Unnecessary Validation
 
@@ -1178,7 +1181,7 @@ AvastarTeleporter could have a single function that returns both the `name` and 
 require(msg.sender != address(0));
 ```
 
-Is unnecessary as `msg.sender` can never be 0. This is present in AvastarPrimeMinter [L152](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L152), [L164](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L164), [L176](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L176)
+This validation is unnecessary as `msg.sender` can never be address(0). This issue is present in AvastarPrimeMinter on [L152](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L152), [L164](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L164), and [L176](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarPrimeMinter.sol#L176)
 
 ##### Recommendation
 
@@ -1186,14 +1189,14 @@ Validating the same inputs in both `purchasePrime()` and `mintPrime()` is redund
 
 ##### Status
 
-Mostly addressed. `require(msg.sender != address(0))` has been [removed](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/298e38ad4c169b0fa1142fec5938c90450cc402b#diff-b7b364011b2d057b016161e4d21a0a98). Some of the duplicated validation between `purchasePrime()` and `mintPrime()` has been removed. There is still an opportunity to funnel all minting through the PrimeMinter, even the promos. This would eliminate the need for duplicating code in both contracts.
+Mostly addressed. `require(msg.sender != address(0))` has been [removed](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/298e38ad4c169b0fa1142fec5938c90450cc402b#diff-b7b364011b2d057b016161e4d21a0a98). Some of the duplicated validation between `purchasePrime()` and `mintPrime()` has been removed. There is still an opportunity to funnel all minting through the PrimeMinter, even the promos. This would eliminate the need for code duplication in both contracts.
 
 ### N16: Redundant and/or Duplicated Code
 
 ##### Description
 
-- `metadataContractAddress` on [L37](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L37) can be declared public and automatically produce a getter function. This would remove the need for the redundant `getMetadataContractAddress()` on [L71-L75](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L71-L75) function
-- Many functions repeatedly downcast inputs rather than storing them as local memory variables. If this type of type conversion is needed more than once during execution it can be stored locally. Repeating the down-casting adds gas for each repetition and reduces code readability
+1. The variable `metadataContractAddress` on [L37](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L37) can be declared public and automatically produce a getter function. This would remove the need for the redundant `getMetadataContractAddress()` on [L71-L75](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L71-L75) function.
+2. Many functions repeatedly downcast the same inputs rather than storing them once as variables in local memory. If type conversion is needed more than once during function execution favour storing a local variable. Repeated the down-casting adds gas overhead and reduces code readability.
 
 ##### Status
 
@@ -1203,21 +1206,23 @@ Addressed in some cases. This is a very minor optimization that could be impleme
 
 ##### Description
 
-It's possible for the external call in the `safeTransferFrom()` on [L334](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol#L334) ERC-721 interface check to trigger reentrancy in a specific edge case. This requires that malicious craft a function signature collision with `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`. The signature of this function is `0x150b7a02`. An example of a valid colliding signature is `bytes4(keccak256("$$$_10284c80_$$$()"))`. If a contract with the later function is called with 0 ether value, it executes as a direct method `CALL` and can pass an arbitrary amount of gas. It does not execute as a `STATICCALL`. If this malicious function returns `0x150b7a02` at the end of execution it can execute arbitrary logic, including reentrancy in the interim.
+It's possible for the external call in the `safeTransferFrom()` function in the OpenZeppelin [ERC-721 contract](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol) ERC-721 to trigger reentrancy in a specific edge case. An external call is made on [L344](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol#L334) of the `_checkOnERC721Received()` function.
+
+This is an unlikely edgecase that would require a that malicious attacker to craft a function signature collision with `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`. The signature of this function is `0x150b7a02`. An example of a valid colliding function signature is `bytes4(keccak256("$$$_10284c80_$$$()"))`. If a contract with the later function is called with 0 ether value, it executes as a direct method `CALL` and can pass an arbitrary amount of gas. It does not execute as a `STATICCALL`, which would limit the gas passed to external caller. If the malicious function returns `0x150b7a02` at the end of execution it can execute arbitrary logic, including reentrancy.
 
 ##### Status
 
-Acknowledged. The risks of modifying dependencies and/or breaking established standards are likely greater than the risk from this hypothetical edge case.
+Acknowledged. The risks of modifying dependencies and/or breaking established standards are likely greater than any risks from this hypothetical edge case.
 
 ### N18: TraitsUsed() Event Emits the Full Array in All Cases
 
 ##### Description
 
-`useTraits()` requires at least one trait to change states in order for the function to reach the `TraitsUsed()` event. However, this function emits the full `prime.replicated` array without indicating which entries reflect state changes.
+The function `useTraits()` on [L119-L158](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L119-L158) in AvastarTeleporter requires at least one trait to change states in order for the function to reach the `TraitsUsed()` event. However, this function emits the full `prime.replicated` array without indicating which entries changed states.
 
 ##### Recommendation
 
-I recommend creating a new array in memory and tracking the traits used by index. The event can then emit a smaller set of traits who've states have changed.
+I recommend creating a new array in memory and tracking the traits used by index. The event can then emit a smaller set of traits with states that have changed.
 
 ##### Status
 
@@ -1251,17 +1256,17 @@ Acknowledged.
 
 ##### Description
 
-A comment on [L48](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarTeleporter.sol#L48) of AvastarTeleporter incorrectly refers to the `TeleporterContractSet()` event being emitted when the function emits the event `MetadataContractAddressSet()`.
+A comment on [L48](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/1ea95a92d0859610533f40acd1df68a91353c0ea/contracts/AvastarTeleporter.sol#L48) in AvastarTeleporter incorrectly refers to the `TeleporterContractSet()` event being emitted when the function emits the event `MetadataContractAddressSet()`.
 
 ##### Status
 
-[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L48)
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L48).
 
 ### N21: Hard-Coded Limited in for Loop Is Not Future-Proof
 
 ##### Description
 
-`assembleArtwork()` on [L249](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L249) and `assembleTraitMetadata()` on [L362](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L362) both hardcode the limit to a for loop as `Gene.HAIR_STYLE`. There is nothing indicating that this will always be the last value in the enum. In future versions of the contract it could easily be overlooked during an upgrade.
+On [L249](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L249) in the `assembleArtwork()` function in TraitFactory and on [L362](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarMetadata.sol#L362) in `assembleTraitMetadata()` function in AvastarMetadata both hardcode the upper limit of a for loop as `Gene.HAIR_STYLE`. There is nothing indicating that this will always be the final value in the Gene enum. This could easily be overlooked in future updates to the contracts.
 
 ```solidity
 for (uint8 slot = 0; slot <= uint8(Gene.HAIR_STYLE); slot++){...}
@@ -1273,18 +1278,18 @@ Acknowledged.
 
 ### N22: Unnecessary Inheritance
 
-No contract in the AvastarMetadata inheritance structure uses the SafeMath Library. It is inherited in AccessControl on [L13-L14](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol#L13-L14). However, neither AccessControl nor any of the contracts which inherit it use the library
+No contract in the AvastarMetadata inheritance structure uses the SafeMath Library. It is inherited in AccessControl on [L13-L14](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol#L13-L14). However, neither AccessControl nor any of the contracts which inherit it use the library.
 
 ```solidity
 using SafeMath for uint256;
 using SafeMath for uint16;
 ```
 
-PrimeMinter uses SafeMath. However, it should declare it at the appropriate point and with the appropriate specificity for its use. A better location for declaring the library is at the start of AvastarPrimeMinter for `uint256` only. Several OpenZeppelin dependencies in AvastarTeleporter reference and use SafeMath. However, none of the core contracts use it. In all cases, the SafeMath declarations can be removed from AccessControl.
+PrimeMinter uses SafeMath. However, it should declare it at the appropriate point and with the appropriate specificity for its use. A better location for declaring the library is at the start of AvastarPrimeMinter (for `uint256` only). Several OpenZeppelin dependencies in AvastarTeleporter reference and use SafeMath. However, none of the core contracts use it. In all cases, the SafeMath declarations can be removed from AccessControl.
 
 ##### Status
 
-This is a new informational note and was not previously included the full audit report. There are several cases where entire inherited libraries are unused.
+This is a new informational note submitted after the full audit report and thus was not addressed.
 
 ## Appendix
 
