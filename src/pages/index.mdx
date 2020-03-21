@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -977,19 +977,15 @@ Acknowledged. This contract was not within the scope or timeline of the audit.
 
 ### N01: Floating Pragmas
 
-#####
-
-All contracts.
-
 ##### Description
 
-The contracts should specify a fixed pragma version to associate with the development, testing, and auditing of these contracts.
+All base Avastar contracts should specify a fixed pragma version to associate with the development, testing, and auditing of these contracts. They currently use a floating pragma.
 
 ```solidity
+//fixed
 pragma solidity 0.5.12;
 
-//vs
-
+//floating
 pragma solidity ^0.5.12;
 ```
 
@@ -1001,21 +997,21 @@ Addressed in all core contracts, which are now locked to solc version 0.5.14. Th
 
 ##### Description
 
-While unlikely to be accessed, I would not include the code for the `sendValue()` function on [L61-L67](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/utils/Address.sol#L61-L67) in the OpenZeppelin Address library. A bug allowing unexpected `JUMPs` might lead to the execution of the low-level `call.value()` in this function.
+While unlikely to be accessed, I would not include the code for the `sendValue()` function on [L61-L67](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/utils/Address.sol#L61-L67) in the OpenZeppelin Address library. A bug allowing unexpected `JUMPs` could lead to the execution of the low-level `call.value()` in this function.
 
 ##### Status
 
-Acknowledged with a request for further discussion. In general, I do not recommend modifying OpenZeppelin dependencies. However, this particular function is a very recent addition to the library and is not battle-tested like the majority of their code base. There is a very small risk that unexpected behaviour in another part of the contract could jump to and/or trigger the execution of this function. This is purely hypothetical, however, and very unlikely. The potential risk is further reduced by the fact that AvastarTeleporter is not designed to hold ether.
+Acknowledged. In general, I do not recommend modifying OpenZeppelin dependencies. However, this particular function is a very recent addition to the library and is not as battle-tested as the majority of their code base. There is a very small risk that unexpected behaviour in another part of the contract could jump to and/or trigger the execution of this function. This is purely hypothetical, however, and very unlikely. The potential risk is further reduced by the fact that AvastarTeleporter is not designed to hold ether.
 
 ### N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future
 
 ##### Description
 
-The function `strConcat()` on [L42-L46](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarBase.sol#L42-L46) in AvastarBase uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with a hash, its output can produce collisions.
+The function `strConcat()` on [L42-L46](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarBase.sol#L42-L46) in AvastarBase uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with for some other purpose that incldues a hash, its output can produce collisions.
 
 ##### Status
 
-Acknowledged with a request for clarification. This is an informational note about a recently discovered bug related to combining dynamic data types with `abi.encodePacked()`. See [SWC-133](https://swcregistry.io/docs/SWC-133) for more information. The current Avastars code is not at risk. However, it uses a pattern close enough to the vulnerable example that a warning is warranted. There is only a risk if the `strConcat()` function is adapted or extended in future updates and used to generate hashes or perform validations.
+-- Acknowledged. This is an informational note about a recently discovered bug related to combining dynamic data types with `abi.encodePacked()`. See [SWC-133](https://swcregistry.io/docs/SWC-133) for more information. The current Avastars code is not at risk. However, it uses a pattern close enough to the vulnerable example that a warning is warranted. There is only a risk if the `strConcat()` function is adapted or extended in future updates and used to generate hashes or perform validations.
 
 ### N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types
 
@@ -1035,7 +1031,7 @@ This would be consistent with how the AvastarTeleporter address is set in the Me
 
 ##### Status
 
-Addressed.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarPrimeMinter.sol#L77-L87).
 
 ### N06: Set Short Circuits With Mostly Likely Case First
 
@@ -1059,16 +1055,24 @@ In this example from `mintPrimes()` the if / else statements could flip.
 
 ##### Status
 
-Addressed.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/PrimeFactory.sol#L156-L160). The conditions in the above example were reversed.
+
+```solidity
+if (_series != Series.PROMO) {
+  require(count < MAX_PRIMES_PER_SERIES);
+} else {
+  require(count < MAX_PROMO_PRIMES_PER_GENERATION);
+}
+```
 
 ### N07: State Variable Initialized With Default Value
 
 ##### Description
 
-On L64 of AccessControl a state variable is unnecessarily initialized with its default value (false / 0).
+On [L64](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L64) of AccessControl a state variable is unnecessarily initialized with its default value (false || 0).
 
 ```solidity
-    bool public upgraded = false;
+bool public upgraded = false;
 ```
 
 ##### Status
@@ -1079,7 +1083,7 @@ Acknowledged. In this example, the redundant declaration of the default value im
 
 ##### Description
 
-This is connected to the Enum validation issue. As a best practice, `Invalid` execution states should not be the intended outcome of a test.
+This is connected to the `enum` validation issue in [L01](#l01-out-of-bounds-enum-inputs-can-trigger-invalid-opcode). As a best practice, `INVALID` execution states should not be the intended outcome of a test.
 
 ##### Status
 
@@ -1093,13 +1097,13 @@ No events in the code base take advance of the `indexed` keyword that allows for
 
 ##### Status
 
-Auditor error. There are in four events which use the `indexed` keyword. This issue is retracted.
+This was an auditor error. There are, in fact, four events which use the `indexed` keyword. This issue is retracted.
 
 ### N10: Empty Events Are Emitted
 
 ##### Description
 
-`ContractPaused()` and `ContractUnpaused()` in AccessControl are empty. They could contain the address of the caller or other relevant data.
+The events `ContractPaused()` and `ContractUnpaused()` in AccessControl are empty. They could contain the address of the caller or other relevant data.
 
 ##### Status
 
