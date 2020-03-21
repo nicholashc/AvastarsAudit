@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -899,17 +899,17 @@ Check that the length of `_artist` and `_infoURI` is > 0.
 
 ##### Description
 
-The `approveTraitAccess()` function on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter emits the event `TraitAccessApproved()` regardless if any new traits have been approved or changed handlers. It is possible to provide an empty array of `_primeIds` as an argument for this function. It is also possible to provide a set of `_primeIds` that have already been approved to the given handler. In both cases, the event unnecessarily broadcasts when there are no state modifications.
+The `approveTraitAccess()` function on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter emits the event `TraitAccessApproved()` regardless if any new traits have been approved or if any handlers have changed. It is possible to provide an empty array of `_primeIds` as an argument for this function. It is also possible to provide a set of `_primeIds` that have already been approved to the given handler. In both cases, the event unnecessarily broadcasts when there are no state modifications.
 
 ##### Status
 
-Addressed. The function will now only complete execution if there is a state change.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L101-L120). The function now checks that array length for `_primeIds` is greater than 0. It will also only complete execution if there is a state change.
 
 ### L11: Functions With Unnecessarily Permissive Visibility
 
 ##### Description
 
-The following functions are not used internally in a contract and can safely be changed from `public` to `external`.
+The following functions are not used internally and can safely be changed from `public` to `external`.
 
 - `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102), `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory
 - `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory
@@ -927,7 +927,7 @@ Addressed. Visibility changed to `external` on all 8 recommended functions.
 
 See [Test Coverage][#a02-test-coverage] section in the Appendix for more detail.
 
-A significant percentage of the branches in AvastarPrimeMinter, AvastarTeleporter, PrimeFactory, ReplicantFactory, TraitFactory have limited or no unit test coverage. Large parts of the inherited token functionality are not covered by tests. Testing the interactions of the OpenZeppelin and Avastars base contracts may uncover bugs not present in common implementations of the standard ERC-721 contracts.
+A significant percentage of the branches in AvastarPrimeMinter, AvastarTeleporter, PrimeFactory, ReplicantFactory, TraitFactory have limited or no unit test coverage. Large parts of the inherited token functionality are not covered by unit tests. Testing the interactions of the OpenZeppelin and Avastars contracts may uncover bugs not present in common implementations of the standard ERC-721 contracts.
 
 ##### Status
 
@@ -937,11 +937,11 @@ Improved. Unit test coverage improved in areas identified in the audit and in ge
 
 ##### Description
 
-By default, the 0.5.12 solc compiler targets the `petersburg` evmVersion. Using the new opcodes and updated gas pricing available in the `istanbul` evmVersion will better replicate current conditions of the main net. The default evmVersion was changed to `istanbul` in solc 0.5.14. (Note: while Berlin is the most recent evmVersion available it is still considered experimental).
+By default, the 0.5.12 solc compiler targets the `petersburg` evmVersion. Using the new opcodes and updated gas pricing available in the `istanbul` evmVersion will better replicate current conditions of the main net. The default evmVersion was changed to `istanbul` in solc 0.5.14. (Note: while `berlin` is the most recent evmVersion available it is still considered experimental).
 
 ##### Status
 
-Addressed. The core contracts now use solc 0.5.14, which set Istanbul as the default evmVersion. This change is confirmed in the contract build artifacts.
+Addressed. The core contracts now use solc 0.5.14, which set `istanbul` as the default evmVersion. This change was confirmed in the contract build artifacts.
 
 ### L14: Unnecessary Duplication of Avastar Storage
 
@@ -951,17 +951,17 @@ Addressed. The core contracts now use solc 0.5.14, which set Istanbul as the def
 
 ##### Status
 
-Acknowledged. This is a potential optimization and does not pose a security risk.
+Acknowledged. This is an optimization and does not pose a direct security risk.
 
 ### L15: Inconsistent Use of uint Alias
 
 ##### Description
 
-In various parts of the code base variables are declared with the `uint` alias. They should be replaced in favour of explicit types to avoid confusion and unintentional implicit type conversion.
+In various parts of the code base variables are declared with the `uint` alias. They should be replaced with `uint256` to favour of explicitness and to avoid unintentional implicit type conversion.
 
 ##### Status
 
-Acknowledged. This is primarily a style note. The main risk of this item comes from potential human error during development. For example, overlooking an implicit conversion or type casting when a variable is changed or moved.
+Acknowledged. This is primarily a style note. The main risk of this item comes from potential human error during development. For example, overlooking an implicit type conversion or type casting when a variable is changed or moved.
 
 ### L16: AvastarReplicantMinter Contract Not Available
 
@@ -971,7 +971,7 @@ At the time of the audit the AvastarReplicantMinter contract was not available f
 
 ##### Status
 
-Acknowledged. Not within the scope or timeline of this audit.
+Acknowledged. This contract was not within the scope or timeline of the audit.
 
 ## Note
 
