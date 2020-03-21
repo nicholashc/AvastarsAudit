@@ -22,7 +22,7 @@ export default Layout;
 # Avastars Smart Contract Audit Report
 
 v0.3.0<br />
-19 March 2020<br />
+21 March 2020<br />
 [@nicholashc](https://github.com/nicholashc)<br />
 
 ---
@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -771,7 +771,7 @@ Emit the local variable `depositorBalance` rather than accessing state with `dep
 
 ##### Description
 
-Ensuring that each avastar has a trait hash that corresponds with valid traits happens entirely off-chain. The functions `assembleTraitMetadata()` and `renderAvastar()` have no mechanism for parsing invalid genes other than omitting them. Not all hashes produce valid Avastars. The application relies on an external validation systems and is not enforced at the smart contract level.
+Creating and validating the trait hash for each Avastar happens entirely off-chain. There are a siginificant number of possible hashes which do not map to valid traits. The functions `assembleTraitMetadata()` and `renderAvastar()` have no mechanism for parsing invalid genes other than omitting them. The application relies on an external validation systems and is not enforced at the smart contract level.
 
 ##### Status
 
@@ -781,21 +781,23 @@ Acknowledged. Centralized external validation is part of the application's trust
 
 ##### Description
 
-The function `createTrait()` on [L175-L208](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L175-L208) accepts inputs that can include duplicate values for the Series\[] array. For example:
+The function `createTrait()` on [L175-L208](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L175-L208) will accept duplicate values for the Series\[] array. For example:
 
 ```solidity
 createTrait(..., [Series.ONE, Series.ONE, Series.ONE], ...);
 ```
 
+Correct trait initialization relies on external validation.
+
 ##### Status
 
-Acknowledged. External validation of inputs for permissioned functions is part of the application's trust model.
+Acknowledged. External validation of the arguements passed to `createTrait()` is part of the application's trust model.
 
 ### L05: traitHandlerByPrimeTokenId Gives a Handler Access to All of a User's Unused Traits
 
 ##### Description
 
-The current design of the function `approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter does not allow for a token owner to atomically control approvals or handlers for individual trait in a single token. The `bool` flag system could be extended to allow for granular trait control based on index. There is limited benefit to tracking traits individually if they cannot be used as atomic units.
+The current design of the function `approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter does not allow a token owner to atomically control approvals individual traits. The `bool` flag system could be extended to allow for granular trait control based on array index. There is limited benefit to tracking traits individually if they cannot be used as atomically.
 
 ##### Status
 
@@ -805,7 +807,7 @@ Acknowledged. This is the intended functionality. Granular control of trait appr
 
 ##### Description
 
-The function `upgradeContract()` on [L123-L127](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L123-L127) in AccessControl does not check address input. It's possible for the `sysAdmin` to accidentally or maliciously set the address of new contract in to `address(0)` when calling the `upgradeContract()` function.
+The function `upgradeContract()` on [L123-L127](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L123-L127) in AccessControl does not check the validity of the address input. It's possible for a `sysAdmin` to accidentally or maliciously set the address of new contract in to `address(0)` when calling the `upgradeContract()`.
 
 ##### Recommendation
 
@@ -813,17 +815,21 @@ This should be explicitly disallowed.
 
 ##### Status
 
-Addressed.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol#L107). By adding the following line:
+
+```solidity
+require(_newAddress != address(0));
+```
 
 ### L07: isAvastarTeleporter() and isAvastarMetadata() Checks Are Insufficient
 
 ##### Description
 
-The functions `isAvastarTeleporter()` on [L43](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L43) and `isAvastarMetadata()` on [L94](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarMetadata.sol#L94) are insufficient checks for \"contractness\". Returning a value as always true provides little assurance that the prospective contract implements the intended functionality. Any contract could add a function by the same name which contained arbitrary logic and still returned true (mitigated somewhat by admin privileges).
+The functions `isAvastarTeleporter()` on [L43](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L43) and `isAvastarMetadata()` on [L94](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarMetadata.sol#L94) provide limited assurances that the new contracts are actually AvastarTeleporter or AvastarMetadata. Returning a value as always `true` does not verify that the prospective contract implements the intended functionality or interface. Any contract could add a function by the same name which contained arbitrary logic and still returned true (mitigated somewhat by admin privileges).
 
 ##### Recommendation
 
-These contracts could register their interfaces in the ERC-165 registry and perform much more robust interface checks.
+These contracts could register their interfaces in the ERC-165 registry and perform a much more robust interface checks.
 
 ##### Status
 
@@ -833,9 +839,9 @@ Acknowledged. The risk of a contract maliciously spoofing the return value is re
 
 ##### Description
 
-Reordering the declaration of variables in the Trait struct on [L60-L71] in AvastarTypes will reduce the size of every instance of this struct by one full storage slot. This will save gas and reduce the contract size during deployment. It will also reduce the gas costs when the Traits are added.
+Reordering the declaration of variables in the Trait struct on [L60-L71](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTypes.sol#L60-L71) in AvastarTypes will reduce the size of every instance of this struct by one full storage slot (32 bytes). This will save gas and reduce the contract size during deployment. It will also reduce the gas costs when new Traits are added.
 
-The struct is declared as:
+The struct is currently declared as:
 
 ```solidity
 struct Trait {
@@ -853,7 +859,7 @@ struct Trait {
 
 ##### Recommendation
 
-By reorganizing the lexical order of declaration, it's possible to tightly pack the variables into one fewer storage slot. This change will reduce the gas cost every time `createTrait()` is called by ~20k.
+By reorganizing the lexical order of declaration, it's possible to tightly pack the variables into one fewer storage slot. This will reduce the gas cost for each new trait created by 20k using one fewer `SSTORE` opcode.
 
 ```solidity
 struct Trait {
@@ -873,13 +879,13 @@ struct Trait {
 
 ##### Status
 
-Accepted. The gas cost of `createTrait()` was reduced by approximately 20%.
+[Accepted](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTypes.sol#L60-L71). The effective gas cost of `createTrait()` was reduced by approximately 20%.
 
 ### L09: setAttribution() Strings Can Be Set to Null
 
 ##### Description
 
-In the function `setAttribution()` on [152-161](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L152-L161) in TraitFactory, it is possible for a `sysAdmin` to accidentally or maliciously set the attribution of a Generation as an empty string.
+In the function `setAttribution()` on [152-161](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L152-L161) in TraitFactory it's possible for a `sysAdmin` to accidentally or maliciously set the attribution of a Generation as an empty string.
 
 ##### Recommendation
 
@@ -887,7 +893,7 @@ Check that the length of `_artist` and `_infoURI` is > 0.
 
 ##### Status
 
-Addressed. This function now checks that the length of the input is greater than 0.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol#L159). This function now checks that the length of the input is greater than 0.
 
 ### L10: TraitAccessApproved() Event Does Not Necessarily Reflect State Changes
 
@@ -1460,7 +1466,7 @@ These issues have a reduced impact on security
 | Date     | Description                                 | Version | Commit                                                                                                        |
 | :------- | :------------------------------------------ | :------ | :------------------------------------------------------------------------------------------------------------ |
 | 05/03/20 | Avastars Smart Contract Audit Public Report | 0.3.0   | N/A                                                                                                           |
-| 05/19/20 | Post-Audit Follow Up Report                 | 0.2.0   | [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842) |
+| 05/21/20 | Post-Audit Follow Up Report                 | 0.2.0   | [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842) |
 | 28/01/20 | Avastars Smart Contract Audit Full Report   | 0.1.0   | [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea) |
 | 12/01/20 | Preliminary Assessment                      | N/A     | [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) |
 | 09/15/19 | On-Chain Storage Cost Feasibility Report    | N/A     | N/A                                                                                                           |
