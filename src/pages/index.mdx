@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\\\\*
+\\\\\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\\\\\*
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -69,7 +69,7 @@ Once live, the Avastars contracts will live at 4 addresses. These are made up of
 
 This contract manages the Avastar, Prime, and Replicant tokens. It holds the token state, mints new tokens, manages ERC-721 functionality, and stores trait and attribution information. AvastarTeleporter is not designed to receive ether.
 
-The current AvastarTeleporter main-net contract is located at [0xF3E778F839934fC819cFA1040AabaCeCBA01e049](https://etherscan.io/address/0xf3e778f839934fc819cfa1040aabacecba01e049#code).
+The current AvastarTeleporter mainnet contract is located at [0xF3E778F839934fC819cFA1040AabaCeCBA01e049](https://etherscan.io/address/0xf3e778f839934fc819cfa1040aabacecba01e049#code).
 
 <img src={teleporter_inheritence} width="1200" alt="teleporter_inheritence" />
 
@@ -86,7 +86,7 @@ The current AvastarTeleporter main-net contract is located at [0xF3E778F839934fC
 
 This contract assembles the artwork and metadata associated with the tokens. It calls the AvastarTeleporter to read from its state. AvastarMetadata is not designed to receive ether or handle ERC-721 tokens.
 
-The current AvastarMetadata main-net contract is located at [0xE895B49900636F0330c3dc2Fb6FA09d234622E8e](https://etherscan.io/address/0xe895b49900636f0330c3dc2fb6fa09d234622e8e#code).
+The current AvastarMetadata mainnet contract is located at [0xE895B49900636F0330c3dc2Fb6FA09d234622E8e](https://etherscan.io/address/0xe895b49900636f0330c3dc2fb6fa09d234622e8e#code).
 
 <img src={metadata_inheritence} width="1200" alt="metadata_inheritence" />
 
@@ -99,7 +99,7 @@ The current AvastarMetadata main-net contract is located at [0xE895B49900636F033
 
 This contract accepts deposits from users who wish to purchase Primes. When triggered by a permissioned minter transaction, it initiates the minting of new Prime tokens by calling the AvastarTeleporter. AvastarPrimeMinter has the ability to both send and receive ether. It is not designed to receive ERC-721 tokens.
 
-The current AvastarPrimeMinter main-net contract is located at [0xE31763aaD9294f073DDF18B36503ed037ae5e737](https://etherscan.io/address/0xe31763aad9294f073ddf18b36503ed037ae5e737#code).
+The current AvastarPrimeMinter mainnet contract is located at [0xE31763aaD9294f073DDF18B36503ed037ae5e737](https://etherscan.io/address/0xe31763aad9294f073ddf18b36503ed037ae5e737#code).
 
 <img src={minter_inheritence} width="1200" alt="minter_inheritence" />
 
@@ -1297,6 +1297,8 @@ This is a new informational note submitted after the full audit report and thus 
 
 ##### Core Contracts
 
+The following core Avastars contracts were included within the scope of the audit review:
+
 - [AccessControl.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AccessControl.sol)
 - [AvastarBase.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarBase.sol)
 - [AvastarFactory.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarFactory.sol)
@@ -1312,6 +1314,8 @@ This is a new informational note submitted after the full audit report and thus 
 - [TraitFactory.sol](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/TraitFactory.sol)
 
 ##### OpenZeppelin v2.4.0 Dependencies
+
+The following contracts, interfaces, and libraries were included within the scope of the audit review:
 
 - [Roles.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/access/Roles.sol)
 - [Counters.sol](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/drafts/Counters.sol)
@@ -1332,9 +1336,11 @@ This is a new informational note submitted after the full audit report and thus 
 
 ##### Additional Reference Material
 
-- Avastars-Contracts GitHub repo
-- Truffle project files
-- Unit tests
+The following material was referenced throughout the audit process, though not specifically included within the scope of the audit:
+
+- [Avastars-Contracts GitHub repo](https://github.com/Dapp-Wizards/Avastars-Contracts/tree/b2ac9159a034c27b3ccad98fa806af08be37a842/)
+- [Truffle project files](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/truffle.js)
+- [Unit tests](https://github.com/Dapp-Wizards/Avastars-Contracts/tree/b2ac9159a034c27b3ccad98fa806af08be37a842/test)
 - Project documentation at [dapp-wizards.github.io](https://dapp-wizards.github.io/Avastars-Contracts)
 - Deployment scripts, utilities, and helper contracts
 - Code comments
@@ -1342,14 +1348,17 @@ This is a new informational note submitted after the full audit report and thus 
 
 ##### Not Available / Out of Scope
 
-- Off chain hash generation including rng
+The following items are explicitly out of scope of the audit
+
+- Off-chain hash generation, including random number genereration
 - Minting management system
+- Key managemenet system for permissioned accounts
 - Pricing system
-- AvastarsReplicantMinter (in development)
+- AvastarsReplicantMinter smart contract
 
 ### A02: Test Coverage
 
-note coverage from first report
+This test coverage represents the unit test coverage as of the [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/tree/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) commit. Test coverage has increased as developement continued. The test coverage report was generated with [solidity-coverage](https://github.com/sc-forks/solidity-coverage).
 
 | File                   | % Statements | % Branches | % Functions | % Lines |
 | :--------------------- | :----------- | :--------- | :---------- | :------ |
@@ -1386,7 +1395,7 @@ note coverage from first report
 
 _\*OpenZeppelin Dependencies_
 
-##### AvastarMetadata
+##### AvastarMetadata (deployed at [0xE895B49900636F0330c3dc2Fb6FA09d234622E8e](https://etherscan.io/address/0xe895b49900636f0330c3dc2fb6fa09d234622e8e#code))
 
 - IAvastarTeleporter
   - AvastarTypes
@@ -1395,7 +1404,7 @@ _\*OpenZeppelin Dependencies_
   - Roles\*
   - SafeMath\*
 
-##### AvastarPrimeMinter
+##### AvastarPrimeMinter (deployed at [0xE31763aaD9294f073DDF18B36503ed037ae5e737](https://etherscan.io/address/0xe31763aad9294f073ddf18b36503ed037ae5e737#code))
 
 - IAvastarTeleporter
   - AvastarTypes
@@ -1404,7 +1413,7 @@ _\*OpenZeppelin Dependencies_
   - Roles\*
   - SafeMath\*
 
-##### AvastarTeleporter
+##### AvastarTeleporter (deployed at [0xF3E778F839934fC819cFA1040AabaCeCBA01e049](https://etherscan.io/address/0xf3e778f839934fc819cfa1040aabacecba01e049#code))
 
 - IAvastarMetadata
 - ReplicantFactory
@@ -1446,7 +1455,7 @@ Directly exploitable security threats that should be fixed immediately. Examples
 
 ##### High
 
-Serious issues that may be indirectly exportable or exploitable under specific circumstances. These issues should be addressed.
+Serious issues that may be indirectly exploitable or exploitable under specific circumstances. These issues should be addressed as soon as possible. Examples include:
 
 - Limited or situational theft or freezing of funds or tokens
 - Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with a significant impact on funds or tokens
@@ -1454,7 +1463,7 @@ Serious issues that may be indirectly exportable or exploitable under specific c
 
 ##### Medium
 
-These issues have a reduced impact on security
+Moderate severity issues or issues that may only be expoitable as edgecases. These issues should be addressed. Examples include:
 
 - Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with moderate or indirect impact on security
 - Potentially dangerous privileges and permissions
@@ -1462,13 +1471,17 @@ These issues have a reduced impact on security
 
 ##### Low
 
-- Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with limited or no impact
-- Deviations from smart contract or Solidity best practices
+Low severity security issues with minor impact. This section may also include substaintial optimization or other recommendations. In some cases, these issues may represent the auditors subjective attitude about best practices, design decisions, and/or contract architecture.
+
+Examples include:
+
+- Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with limited or no impact to security
+- Deviations from smart contract developement or Solidity best practices
 - Unused or redundant code
 
 ##### Note
 
-- Minor recommendations with no direct security implementations, including gas optimizations and style notes
+Minor recommendations with no direct security implementations. These include gas optimizations and style notes.
 
 ### A05: Version History
 
@@ -1482,21 +1495,20 @@ These issues have a reduced impact on security
 
 ### A06: Onchain Storage Cost Recommendations
 
-The following comments were part of an initial feasibility analysis from 09/15/19. It investigates the viability of storing large amounts of data (like svg layers) on-chain.
+The following comments were part of an initial feasibility analysis completed 09/15/19. It investigates the viability of storing large amounts of data on-chain. Several example svg images were provided by the Avastars team to conduct this research.
 
-1. Storing unoptimized full svg data, especially with xml tags, is expensive.In some cases, complex images may even exceed the Ethereum block limit.
+1. Storing unoptimized full svg data, especially with xml tags, is expensive. In some cases, complex images may even exceed the Ethereum block size limit.
 2. Optimized code run through svgo reduces this cost by ~30%.
-3. Tightly packed and pruned storage of the values only reduces the base cost
-   by ~85%.
-4. In general, the source svgs often contain redundant data, blank attributes, unnecessary complexity (polylines, patterns, etc), and use design techniques that exponentially increase the storage footprint (clipping masks)
+3. Tightly packed and pruned storage of the values reduces the base gas cost by ~85%.
+4. The example svgs often contain redundant data, blank attributes, unnecessary complexity (polylines, patterns, etc), and use design techniques that exponentially increase the storage footprint (i.e., clipping masks).
 5. It is possible to store critical values in tightly-packed structs or other efficient data structures. Repeated values can be stored as constants. The original image can still be reconstructed completely without losing information. The tradeoff is increased smart contract code and image reconstruction complexity.
-6. In my honest opinion, attempting to store the full xml-tagged svgs, particularly poorly optimized svgs, is just a bad fit for the current capabilities of smart contracts. It's a square peg in a round hole. If the project was just beginning, my advice would be: consider the most restrictive element of the project first and design to those constraints
-7. If having the whole file on-chain is truly important, consider alternative optimization software, compression software, and establish strict design processes that produce much smaller code footprints
+6. In my honest opinion, attempting to store the full xml-tagged svgs, particularly poorly optimized svgs, is just a bad fit for the current capabilities of smart contracts. It's a square peg in a round hole. If the project was just beginning, my advice would be: consider the most restrictive element of the project first and design to those constraints.
+7. If having the whole file on-chain is truly important, consider alternative optimization software, compression software, and establish strict design processes for the artists that produce much smaller code footprints.
 8. There may be a point where saving some gas is not worth the cost of redeveloping large sections of code base.
 
 ### Disclaimer
 
-This audit incorporates the latest security patterns, best practices, and analysis tools. However, it does not provide a guarantee for the security of the code, the absence of future bugs, or the completeness or correctness of its findings. Protocol changes, an adversarial production environment, and the experimental nature of smart contract technology present ongoing risk to the security of the application.
+This audit incorporated the latest security patterns, best practices, and analysis tools. However, it does not provide a guarantee for the security of the code, the absence of future bugs, or the completeness or correctness of its findings. Protocol changes, an adversarial production environment, and the experimental nature of smart contract technology present ongoing risk to the security of this, or any, application on the Ethereum blockchain.
 
 ## Table of Contents
 
