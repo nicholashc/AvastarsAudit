@@ -2,11 +2,9 @@ import Layout from "../layout";
 
 import calldata from "../img/calldata.svg";
 import generic_contract from "../img/generic_contract.svg";
-import generic_data from "../img/generic_data.svg";
 import issues_table from "../img/issues_table.svg";
 import metadata_inheritence from "../img/metadata_inheritence.svg";
 import minter_inheritence from "../img/minter_inheritence.svg";
-import placeholder from "../img/placeholder.svg";
 import return_data from "../img/return_data.svg";
 import risk_model from "../img/risk_model.svg";
 import storage_layout from "../img/storage_layout.svg";
@@ -14,7 +12,6 @@ import teleporter_inheritence from "../img/teleporter_inheritence.svg";
 import token_lifecycle from "../img/token_lifecycle.svg";
 import token_supply_chart from "../img/token_supply_chart.svg";
 import token_supply_tree from "../img/token_supply_tree.svg";
-import token from "../img/token.svg";
 import role_chart from "../img/role_chart.svg";
 
 export default Layout;
@@ -27,43 +24,69 @@ v0.3.0<br />
 
 ---
 
-<br />
-<br />
-<br />
-\_note placeholders images\_
-<br />
-<img src={generic_contract} width="300" alt="generic_contract" />
-<img src={generic_data} width="1200" alt="generic_data" />
-
 ## Introduction
 
-_note placeholder words for introduction..._
+This is the public version of a recent smart contract securit audit for the [Avastars NFT project](https://avastars.io/). The primary audit work was conducted between 12/01/20 and 05/02/20. Previous versions of the audit reports were delivered directly for the team's internal review in PDF format. Issues were addressed through ongoing communication with Avastars development team. This public version is revised for a wider audience, converted to a more accessible web format, and updated with additional diagrams and clarifying language.
+
+Navigate through general sections via the sidenav links on the left. You can also jump to more granular links, such as each specific issue, by visiting the [Table of Contents](#table-of-contents). This site has a light/dark mode togglable via the sun/moon icon at the bottom of the sidenav.
+
+<img src={generic_contract} width="300" alt="generic_contract" />
 
 ### Objectives
 
-_note revise this content and reformat for public audience..._
-
-The goal of this audit is to analyze the smart contracts for security vulnerabilities, uncover unintended behaviour, and anticipate potential risks that could exist in an adversarial production environment. The report identifies specific security issues and offers actionable recommendations categorized by Risk Level. It also analyzes the design and implementation of the project as a whole, including the contract architecture, trust model, and game theoretic threats. Finally, the report considers how the complexity of the contracts, test coverage, documentation, and quality of the code base impact the security of the application.
+The goal of this audit is to analyze the smart contracts for security vulnerabilities, uncover unintended behaviour, and anticipate potential risks that could exist in an adversarial production environment. The report identifies specific security issues and offers actionable recommendations categorized by [Risk Level](#a04-risk-rating-model). It also analyzes the design and implementation of the project as a whole, including the contract architecture, trust model, and game theoretic threats. Finally, the report considers how the complexity of the contracts, test coverage, documentation, and quality of the code base impact the security of the application.
 
 ### Scope and Timeline
 
-In the week since receiving the audit report, the Avastars team has worked diligently to address the issues in the code base. This report updates the status of any outstanding items and considers the effectiveness of the remediations. It also adds recommendations, clarifications, and/or corrections where required.
+For a full view of the audit timeline please refer to [Version History](#a05-version-history). The primary elements of this process include a Preliminary Assessment Report delivered on 12/01/20 based on commit [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea), the Full Audit Report delivered on 28/01/20 and based on commit [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc), and a Post-Audit Follow-Up Report delivered on 5/02/20 and based on commit [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842). Please see [Smart Contracts Reviewed](#a01-smart-contracts-reviewed) for a full description of the audit scope. Note that any commits after b2ac915 are not considered in this report.
 
-This update considers all changes to the smart contract code up to commit [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842). Please note that this is not a comprehensive re-audit. This effort is limited to a brief manual review of the highest priority issues and modified sections of code.
-
-The revisions successfully addressed the most serious security issues. Many of the lower priority recommendations were also incorporated. I have reviewed each issue with the Avastars team and discussed the solutions. In some cases, the team acknowledged an issue but decided that the best course of action was not to change the contracts directly. In other cases, the team carefully considered whether the security concerns and/or design tradeoffs fell within an acceptable range of operational risk.
-
-This report contains the results from the security audit of the Avastars smart contract code base. The code reviewed includes the Solidity smart contracts from PR#1 [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) on the master branch of the [Avastars-Contracts](https://github.com/Dapp-Wizards/Avastars-Contracts/) repo. A complete list of the files reviewed is available in the [Appendix](#a01-smart-contracts-reviewed).
-
-It also includes an updated analysis of four issues from the [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea) commit. These issues were a part of the Preliminary Report delivered on 12/01/20.
-
-See [Version History](#) for more information.
+Throughout the process, the Avastars team worked diligently to address the issues in the code base and quickly remediate major issues. I have reviewed each issue with the Avastars team and discussed the solutions. In some cases, the team acknowledged an issue but decided that the best course of action was not to change the contracts directly. In other cases, the team carefully considered whether the security concerns and/or design tradeoffs fell within an acceptable range of operational risk.
 
 ## Project Overview
 
+### Core Concept
+
+Avastars attempts to radically extend the metadata associated with NFT projects by taking the bold action of storing re-assembleable svg layers on-chain. The ambition of such a project attempts to solve an ongoing issue in NFT projects where the user owns an arbitrary data string but none of the art or other cultural associattions that make up much of their appeal as collectables.
+
+### Token Design
+
+Avastars tokens are ERC-721 compliant non-fungible tokens. An Avastar can be part one of two waves: Prime or Replicant. Primes are minted with unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored on-chain as svg layers.
+
+Replicants are produced from Primes by recombining Traits. The supply of Replicants is designed to never surpass the supply of Primes.
+
+Users can mint Primes by depositing funds in the AvastarPrimeMinter smart contract. An admin-controlled `minter` account then sends a callback transaction with the genome, traits, and other features as calldata. This transaction accounts for the user's funds in escrow and mints the corresponding token. Users are able to withdraw and deposit funds at will. Pricing information is handled off-chain.
+
+### Token Supply
+
+The maxmium Avastar supply is bounded by the following constraints:
+
+- Generations: 5
+- Series: 5 per Generation + 1 promo Series
+- Promo Primes per Generation: 200
+- Primes per Series: 5,000
+- 25,200 Primes per Generation and 126,000 across all 5 Generations (maximum values)
+- 25,200 Replicants per Generation and 126,000 across all 5 Generations (maximum values)
+- There can be maximum of 252,000 total Avastars
+
+<br />
+<img src={token_supply_tree} width="1200" alt="token_supply_tree" />
+<br />
+
+- _S0: Promo season number_
+- _S1-5: Season number_
+- _G1-5 : Generation number _
+- _P: Primes, including Promos_
+- _R: Replicants_
+
+##### Example Lifecyle of the Token Minting Process
+
+<br />
+<img src={token_lifecycle} width="1200" alt="token_lifecycle" />
+<br />
+
 ### Contract Architecture
 
-Once live, the Avastars contracts will live at 4 addresses. These are made up of 17 core Avastars contracts, including 2 interfaces. In addition, the code base inherits 5 contracts, 4 libraries, and 5 interfaces from the OpenZeppelin smart contract repository. All four contracts have the ability to be paused and upgraded by a permissioned administrator.
+The Avastars project currently has 3 contracts live at on mainnet (with a 4th planned). The code base contains 17 core Avastars contracts, including 2 interfaces. In addition, the code base inherits 5 contracts, 4 libraries, and 5 interfaces from the OpenZeppelin smart contract repository (v2.4.0). All Avastar contracts have the ability to be paused, upgraded, and modified by various permissioned administrator-level addresses.
 
 ##### AvastarTeleporter
 
@@ -71,7 +94,21 @@ This contract manages the Avastar, Prime, and Replicant tokens. It holds the tok
 
 The current AvastarTeleporter mainnet contract is located at [0xF3E778F839934fC819cFA1040AabaCeCBA01e049](https://etherscan.io/address/0xf3e778f839934fc819cfa1040aabacecba01e049#code).
 
+##### AvastarTeleporter Inheritance Structure
+
+<br />
 <img src={teleporter_inheritence} width="1200" alt="teleporter_inheritence" />
+<br />
+
+- _Green: Core Avastars contract deployed at an address_
+- _Blue: Core Avastars asset inherited_
+- _Red: OpenZeppelin asset inherited_
+- _C: Contract_
+- _L: Library_
+- _I: Interface_
+- _oz: OpenZeppelin dependency_
+
+##### AvastarTeleporter Permissioned Accounts
 
 | Address                                                                                | Permissions  | Notes                       |
 | :------------------------------------------------------------------------------------- | :----------- | :-------------------------- |
@@ -80,7 +117,9 @@ The current AvastarTeleporter mainnet contract is located at [0xF3E778F839934fC8
 | [0xE31763...](https://etherscan.io/address/0xE31763aaD9294f073DDF18B36503ed037ae5e737) | minter       | AvastarPrimeMinter contract |
 | [0xb60dfb...](https://etherscan.io/address/0xb60dfb4F11B38990911E8F8569B8b72DdBFB0411) | minter       | EOA                         |
 
-\*EOA = Externally-owned account (non-contract)
+_Note: it is possible for these addresses to change or for new addresses to be granted roles_
+
+_EOA: Externally Owned Account (non-contract)_
 
 ##### AvastarMetadata
 
@@ -88,20 +127,34 @@ This contract assembles the artwork and metadata associated with the tokens. It 
 
 The current AvastarMetadata mainnet contract is located at [0xE895B49900636F0330c3dc2Fb6FA09d234622E8e](https://etherscan.io/address/0xe895b49900636f0330c3dc2fb6fa09d234622e8e#code).
 
+##### AvastarMetadata Inheritance Structure
+
+<br />
 <img src={metadata_inheritence} width="1200" alt="metadata_inheritence" />
+<br />
+
+##### AvastarMetadata Permissioned Accounts
 
 | Address                                                                                | Permissions  | Notes         |
 | :------------------------------------------------------------------------------------- | :----------- | :------------ |
 | [0xeff045...](https://etherscan.io/address/0xeff045036321258117FF9cF15f67Ac22a51c01D9) | admin        | deployer, EOA |
 | [0x4C7BEd...](https://etherscan.io/address/0x4C7BEdfA26C744e6bd61CBdF86F3fc4a76DCa073) | admin, owner | EOA           |
 
+_Note: it is possible for these addresses to change or for new addresses to be granted roles_
+
 ##### AvastarPrimeMinter
 
-This contract accepts deposits from users who wish to purchase Primes. When triggered by a permissioned minter transaction, it initiates the minting of new Prime tokens by calling the AvastarTeleporter. AvastarPrimeMinter has the ability to both send and receive ether. It is not designed to receive ERC-721 tokens.
+This contract accepts deposits from users who wish to purchase Primes. When triggered by a permissioned `minter` transaction, it initiates the minting of new Prime tokens by calling the AvastarTeleporter contract. AvastarPrimeMinter has the ability to both send and receive ether. It is not designed to receive ERC-721 tokens.
 
 The current AvastarPrimeMinter mainnet contract is located at [0xE31763aaD9294f073DDF18B36503ed037ae5e737](https://etherscan.io/address/0xe31763aad9294f073ddf18b36503ed037ae5e737#code).
 
+##### AvastarPrimeMinter Inheritance Structure
+
+<br />
 <img src={minter_inheritence} width="1200" alt="minter_inheritence" />
+<br />
+
+##### AvastarMetadata Permissioned Accounts
 
 | Address                                                                                | Permissions  | Notes         |
 | :------------------------------------------------------------------------------------- | :----------- | :------------ |
@@ -116,70 +169,43 @@ The current AvastarPrimeMinter mainnet contract is located at [0xE31763aaD9294f0
 | [0xb3e1d8...](https://etherscan.io/address/0xb3e1d813487aFfBCF327C5FB4DA1Ae29584B7FC3) | minter       | no tx history |
 | [0xF15DE3...](https://etherscan.io/address/0xF15DE3db897050c5B641290E090E1f6106791DE1) | minter       | no tx history |
 
+_Note: it is possible for these addresses to change or for new addresses to be granted roles_
+
 ##### AvastarReplicantMinter
 
-This contract is still in development, but has much of the same functionality as AvastarPrimeMinter.
-
-### Token Design
-
-Avastars tokens are ERC-721 compliant non-fungible tokens. An Avastar can be part one of two waves: Prime or Replicant. Primes are minted within unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored on-chain as svg layers.
-
-Replicants are produced from Primes by recombining Traits. The supply of Replicants is not specified in the contracts but is designed to never surpass the supply of Primes.
-
-Users can mint Primes by depositing funds in the smart contract. An admin account then sends a 2nd callback transaction with the genome, traits, and other features as calldata. The transaction accounts for the user's funds in escrow and mints the corresponding token.
-
-### Token Supply
-
-<img src={token_supply_tree} width="1200" alt="token_supply_tree" />
-
-| Legend |
-| :----- |
-| S0     | Promo season number |
-| S1-5   | Season number |
-| G1-5   | Generation number |
-| P      | Primes, including Promos |
-| R      | Replicants |
-
-- Generations: 5
-- Series: 5 per generation, plus promos
-- Promo Primes per generation: 200
-- Primes per series: 5,000
-- 25,200 Primes per generation and 126,000 all time across the 5 generations
-- 25,200 Replicants per generation and 126,000 all time across the 5 generations
-- There can be maximum of 252,000 total Avastars
-
-<img src={token_lifecycle} width="1200" alt="token_lifecycle" />
+This contract is still in development.
 
 ### Trust Model, Access, and Authority
 
-All contracts define the same three permissioned roles. However, these are set independently in each contract and the addresses holding a role in one contract do not necessarily hold it in another. Multiple addresses can hold the same role in a given contract. The same address can hold multiple permissioned roles in the same or across contracts. Once assigned, a role cannot be taken away.
+All Avastars contracts define the same three permissioned roles: `sysAdmin`, `owner`, and `minter`. However, these are set independently in each contract and the addresses holding a role in one contract do not necessarily hold it in another. Multiple addresses can hold the same role in a given contract. The same address can hold multiple permissioned roles in the same or across contracts.
 
 ##### onlySysAdmin
 
-The admin role has the highest level of permissions. It can assign any other role, pause and unpause, upgrade the contract, and set other permissioned state variables.
+The `sysAdmin` role has the highest level of permissions. It can assign any other role, pause and unpause, upgrade the contract, and set other permissioned state variables.
 
 ##### onlyMinter
 
-The minter role has access to minting new Prime and Replicant tokens. In order for users to make purchases, the AvastarPrimeMinter and AvastarReplicantMinter contracts must hold the minter role in the AvastarTeleporter contract.
+The `minter` role has access to minting new Prime and Replicant tokens. In order for users to make purchases, the AvastarPrimeMinter and AvastarReplicantMinter contracts must hold the minter role in the AvastarTeleporter contract.
 
 ##### onlyOwner
 
-The owner role controls the ability to view and withdraw ether from the sale of Primes and Replicants in the two Minter contracts.
+The `owner` role controls the ability to view and withdraw ether from the sale of Primes and Replicants in the two Minter contracts. The owner can also strip roles from other permissioned addresses.
 
 <img src={role_chart} width="500" alt="role_chart" />
 
 ### Documentation, Code Quality, and Testing
 
-The project is throughly and consistently documented. The code comments are rigorous and clearly explain technical decisions. The truffle project is well-organized. The high-level design decisions are explicit. The caliber of the Avastars documentation will be a huge asset in moving smoothly through the audit process.The smart contracts are accompanied by suite of 105 unit tests (all passing) as well as gas estimates for each function call. This has since been updated to ... tests
+The project is throughly and consistently documented. The code comments are rigorous and clearly explain technical decisions. The truffle project is well-organized. The high-level design decisions are explicit. The caliber of the Avastars documentation was a huge asset in moving smoothly through the audit process.The smart contracts are accompanied by suite of 105 unit tests (all passing) as well as gas estimates for each function call. The test suite has since been expanded to over 140 unit tests. See [Test Coverage](#a02-test-coverage) for more info.
 
 ### Security Considerations
 
-Based on the initially assessment of the smart contract architecture, the following areas will receive particular attention during the full audit:
+Based on the initially assessment of the smart contract architecture, the following areas received particular attention during the full audit:
 
 - input validation and type safety
 - minting, transferring, and approving access to tokens and traits ether deposits and withdraws
 - contract set up, upgradability, and interdependency
-- data validation during external calls and interface checks admin permissions
+- data validation during external calls and interface checks
+- admin permissions
 - internal accounting and token supply
 - race conditions and denial of service vectors
 
@@ -187,25 +213,24 @@ Based on the initially assessment of the smart contract architecture, the follow
 
 ### Summary of Issues
 
+<br />
 <img src={issues_table} width="1200" alt="issues_table" />
 <br />
 
 ### General Assessment
 
-_note update to be in present tense..._
-
-- 50 issues of varying severity were identified during the audit (including 4 previously catalogued in the 12/01/20 Preliminary Assessment) (one removed)
-- The vast majority of issues are relatively minor in nature. Many of the High and Medium severity issues can be fixed will minimal changes to the code base
+- 50 issues of varying severity were identified during the audit (one of which was retracted due to auditor error)
+- The vast majority of issues are relatively minor in nature. Many of the High and Medium severity issues were fixed will minimal changes to the code base
 - The code quality, test suite, and project documentation is of a consistently high caliber
 - The contract architecture attempts to minimize potential attack surfaces as much as possible. For example, there is only a single payable function in the entire project and only two functions designed to withdraw ether
 - The contracts use complex and state-intensive data structures to manage tokens. A number of the more serious vulnerabilities come from type or validation issues or unexpected state access
 - The contracts rely heavily on malleable properties like array lengths to keep track of critical global state values
-- The Avastars team has stated that optimizing gas costs is not the highest priority. They are paying the cost of loading large amounts of state into the contracts as well as minting tokens on behalf of users
+- The Avastars team has stated that optimizing gas costs is not the highest priority, particular for administrator tasks like initializing Traits. They are paying the cost of loading large amounts of state into the contracts as well as minting tokens on behalf of users
 - Privileged access and permissions allow administrators to manage token minting, collect ether, and configure the contracts
 - This trust model allows the administrators to manage a number of operational tasks such as setting prices, generating hashes, and managing the minting process off chain
 - Maintaining this level of control was a conscious design decision. However, it comes with the trade off of requiring that users trust the project's administrators
 - The application requires ongoing actions from the administrators to function
-- The contracts can be paused and upgrade by the administrators at any time
+- The contracts can be paused and upgraded by the administrators at any time
 
 ## Critical Severity
 
@@ -287,8 +312,6 @@ In addition, I recommend increasing the unit test coverage of PrimeFactory to ex
 [Successfully patched](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/PrimeFactory.sol#L173) with the 2nd recommendation.
 
 ### H03: Unauthorized Access to Prime Array With Replicant Tokens and Vice Versa
-
-_note fix these pop out boxes and integrated different dated notes into single narrative..._
 
 ##### Description
 
@@ -977,7 +1000,7 @@ At the time of the audit the AvastarReplicantMinter contract was not available f
 
 Acknowledged. This contract was not within the scope or timeline of the audit.
 
-## Note
+## Notes and Informational Issues
 
 ### N01: Floating Pragmas
 
@@ -1015,7 +1038,7 @@ The function `strConcat()` on [L42-L46](https://github.com/Dapp-Wizards/Avastars
 
 ##### Status
 
--- Acknowledged. This is an informational note about a recently discovered bug related to combining dynamic data types with `abi.encodePacked()`. See [SWC-133](https://swcregistry.io/docs/SWC-133) for more information. The current Avastars code is not at risk. However, it uses a pattern close enough to the vulnerable example that a warning is warranted. There is only a risk if the `strConcat()` function is adapted or extended in future updates and used to generate hashes or perform validations.
+Acknowledged. This is an informational note about a recently discovered bug related to combining dynamic data types with `abi.encodePacked()`. See [SWC-133](https://swcregistry.io/docs/SWC-133) for more information. The current Avastars code is not at risk. However, it uses a pattern close enough to the vulnerable example that a warning is warranted. There is only a risk if the `strConcat()` function is adapted or extended in future updates and used to generate hashes or perform validations.
 
 ### N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types
 
@@ -1031,7 +1054,7 @@ Acknowledged. This was an informational note about Solidity's recent history wit
 
 ##### Description
 
-- This would be consistent with how the AvastarTeleporter address is set in the Metadata contract.
+This would be consistent with how the AvastarTeleporter address is set in the Metadata contract.
 
 ##### Status
 
@@ -1510,7 +1533,7 @@ The following comments were part of an initial feasibility analysis completed 09
 7. If having the whole file on-chain is truly important, consider alternative optimization software, compression software, and establish strict design processes for the artists that produce much smaller code footprints.
 8. There may be a point where saving some gas is not worth the cost of redeveloping large sections of code base.
 
-### Disclaimer
+### A07: Disclaimer
 
 This audit incorporated the latest security patterns, best practices, and analysis tools. However, it does not provide a guarantee for the security of the code, the absence of future bugs, or the completeness or correctness of its findings. Protocol changes, an adversarial production environment, and the experimental nature of smart contract technology present ongoing risk to the security of this, or any, application on the Ethereum blockchain.
 
@@ -1520,8 +1543,10 @@ This audit incorporated the latest security patterns, best practices, and analys
   - [Objectives](#objectives)
   - [Scope and Timeline](#scope-and-timeline)
 - [Project Overview](#project-overview)
-  - [Contract Architecture](#contract-architecture)
+  - [Core Concept](#core-concept)
   - [Token Design](#token-design)
+  - [Token Supply](#token-supply)
+  - [Contract Architecture](#contract-architecture)
   - [Trust Model, Access, and Authority](#trust-model-access-and-authority)
   - [Documentation, Code Quality, and Testing](#documentation-code-quality-and-testing)
   - [Security Considerations](#security-considerations)
@@ -1560,12 +1585,12 @@ This audit incorporated the latest security patterns, best practices, and analys
   - [L14: Unnecessary Duplication of Avastar Storage](#l14-unnecessary-duplication-of-avastar-storage)
   - [L15: Inconsistent Use of uint Alias](#l15-inconsistent-use-of-uint-alias)
   - [L16: AvastarReplicantMinter Contract Not Available](#l16-avastarreplicantminter-contract-not-available)
-- [Note / Informational Issues](#note)
+- [Notes and Informational Issues](#notes-and-informational-issues)
   - [N01: Floating Pragmas](#n01-floating-pragmas)
   - [N02: Unused Library Method With External Call](#n02-unused-library-method-with-external-call)
   - [N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future](#n03-potentially-unsafe-use-of-abiencodepacked-if-hashed-in-the-future)
   - [N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types](#n04-assembleartwork-relies-on-exponentiation-of-mixed-uint-types)
-  - [N05: AvastarPrimeMinter Should Set AvastarTeleporter Contract in Constructor](#n05-avastarprimeminter-should-set-avastar-teleporter-contract-in-constructor)
+  - [N05: AvastarPrimeMinter Should Set AvastarTeleporter Contract in Constructor](#n05-avastarprimeminter-should-set-avastarteleporter-contract-in-constructor)
   - [N06: Set Short Circuits With Mostly Likely Case First](#n06-set-short-circuits-with-mostly-likely-case-first)
   - [N07: State Variable Initialized With Default Value](#n07-state-variable-initialized-with-default-value)
   - [N08: Test Coverage Treats Invalid Execution States as Passing Conditions](#n08-test-coverage-treats-invalid-execution-states-as-passing-conditions)
