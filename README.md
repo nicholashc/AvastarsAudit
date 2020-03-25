@@ -1,10 +1,6 @@
 ### Avastars Smart Contract Audit Public Report
 
-_...in-progress..._
-
 Public report for the Avastars Smart Contract Audit. Draft version at [avastars-audit-draft.now.sh](https://avastars-audit-draft.now.sh).
-
-_...currently being converted from formal pdf report to public-facing website..._
 
 ---
 
