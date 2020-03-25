@@ -22,7 +22,7 @@ export default Layout;
 # Avastars Smart Contract Audit Report
 
 v0.3.0<br />
-23 March 2020<br />
+24 March 2020<br />
 [@nicholashc](https://github.com/nicholashc)<br />
 
 ---
@@ -30,7 +30,7 @@ v0.3.0<br />
 <br />
 <br />
 <br />
-\\\\\\\\\\\\\\\\\\\\\\\\*note placeholders images...\\\\\\\\\\\\\\\\\\\\\\\\*
+\_note placeholders images\_
 <br />
 <img src={generic_contract} width="300" alt="generic_contract" />
 <img src={generic_data} width="1200" alt="generic_data" />
@@ -128,9 +128,17 @@ Replicants are produced from Primes by recombining Traits. The supply of Replica
 
 Users can mint Primes by depositing funds in the smart contract. An admin account then sends a 2nd callback transaction with the genome, traits, and other features as calldata. The transaction accounts for the user's funds in escrow and mints the corresponding token.
 
-_note draft image..._
+### Token Supply
 
 <img src={token_supply_tree} width="1200" alt="token_supply_tree" />
+
+| Legend |
+| :----- |
+| S0     | Promo season number |
+| S1-5   | Season number |
+| G1-5   | Generation number |
+| P      | Primes, including Promos |
+| R      | Replicants |
 
 - Generations: 5
 - Series: 5 per generation, plus promos
@@ -139,8 +147,6 @@ _note draft image..._
 - 25,200 Primes per generation and 126,000 all time across the 5 generations
 - 25,200 Replicants per generation and 126,000 all time across the 5 generations
 - There can be maximum of 252,000 total Avastars
-
-_note draft image..._
 
 <img src={token_lifecycle} width="1200" alt="token_lifecycle" />
 
@@ -159,8 +165,6 @@ The minter role has access to minting new Prime and Replicant tokens. In order f
 ##### onlyOwner
 
 The owner role controls the ability to view and withdraw ether from the sale of Primes and Replicants in the two Minter contracts.
-
-_note add note on "bus factor"..._
 
 <img src={role_chart} width="500" alt="role_chart" />
 
@@ -771,7 +775,7 @@ Emit the local variable `depositorBalance` rather than accessing state with `dep
 
 ##### Description
 
-Creating and validating the trait hash for each Avastar happens entirely off-chain. There are a siginificant number of possible hashes which do not map to valid traits. The functions `assembleTraitMetadata()` and `renderAvastar()` have no mechanism for parsing invalid genes other than omitting them. The application relies on an external validation systems and is not enforced at the smart contract level.
+Creating and validating the trait hash for each Avastar happens entirely off-chain. There are a significant number of possible hashes which do not map to valid traits. The functions `assembleTraitMetadata()` and `renderAvastar()` have no mechanism for parsing invalid genes other than omitting them. The application relies on an external validation systems and is not enforced at the smart contract level.
 
 ##### Status
 
@@ -791,7 +795,7 @@ Correct trait initialization relies on external validation.
 
 ##### Status
 
-Acknowledged. External validation of the arguements passed to `createTrait()` is part of the application's trust model.
+Acknowledged. External validation of the arguments passed to `createTrait()` is part of the application's trust model.
 
 ### L05: traitHandlerByPrimeTokenId Gives a Handler Access to All of a User's Unused Traits
 
@@ -859,7 +863,7 @@ struct Trait {
 
 ##### Recommendation
 
-By reorganizing the lexical order of declaration, it's possible to tightly pack the variables into one fewer storage slot. This will reduce the gas cost for each new trait created by 20k using one fewer `SSTORE` opcode.
+Reorganizing the lexical order of declaration and tightly packing the variables into one fewer storage slot can optimize this structure. This change will reduce the gas cost for each new trait created by 20k using one fewer `SSTORE` opcode.
 
 ```solidity
 struct Trait {
@@ -957,7 +961,7 @@ Acknowledged. This is an optimization and does not pose a direct security risk.
 
 ##### Description
 
-In various parts of the code base variables are declared with the `uint` alias. They should be replaced with `uint256` to favour of explicitness and to avoid unintentional implicit type conversion.
+In various parts of the code base variables are declared with the `uint` alias. They should be replaced with `uint256` in favour of explicitness and to avoid unintentional implicit type conversion.
 
 ##### Status
 
@@ -1007,7 +1011,7 @@ Acknowledged. In general, I do not recommend modifying OpenZeppelin dependencies
 
 ##### Description
 
-The function `strConcat()` on [L42-L46](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarBase.sol#L42-L46) in AvastarBase uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with for some other purpose that incldues a hash, its output can produce collisions.
+The function `strConcat()` on [L42-L46](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarBase.sol#L42-L46) in AvastarBase uses `abi.encodePacked()` with two with dynamic length types. The current implementation is benign. However, if the same function is reused in the future with for some other purpose that includes a hash, its output can produce collisions.
 
 ##### Status
 
@@ -1023,11 +1027,11 @@ The function `assembleArtwork()` in TraitFactory relies on exponentiation of mix
 
 Acknowledged. This was an informational note about Solidity's recent history with serious bugs and changing behaviour in mixed type exponentiation.
 
-### N05: AvastarPrimeMinter Should Set Teleporter Contract in Constructor
+### N05: AvastarPrimeMinter Should Set AvastarTeleporter Contract in Constructor
 
 ##### Description
 
-This would be consistent with how the AvastarTeleporter address is set in the Metadata contract.
+- This would be consistent with how the AvastarTeleporter address is set in the Metadata contract.
 
 ##### Status
 
@@ -1153,9 +1157,9 @@ The function `assembleTraitMetadata()` on [L319-L380] in AvastarMetadata makes a
 
 ##### Status
 
-Acknowledged. This item is primarily informational and does not pose a significant security risk. In this case, however, the number of calls adds significant gas overhead. The following recommendations are meant to clarify the original note but the substaintial refactoring required is realistic to incorporate before the contract goes lives.
+Acknowledged. This item is primarily informational and does not pose a significant security risk. In this case, however, the number of calls adds significant gas overhead. The following recommendations are meant to clarify the original note but the substantial refactoring required is realistic to incorporate before the contract goes lives.
 
-Selectively batching calls from AvastarMetadata to AvastarTeleporter can substantially reduce the total number of calls required. For example, the AvastarMetadata contract is expected to make 30 independant calls to AvastarTeleporter during the normal execution of a single invocation of `getAvastarMetadata()`. While some repetition is necessary with this design pattern, there are at least three opportunities for optimization.
+Selectively batching calls from AvastarMetadata to AvastarTeleporter can substantially reduce the total number of calls required. For example, the AvastarMetadata contract is expected to make 30 independent calls to AvastarTeleporter during the normal execution of a single invocation of `getAvastarMetadata()`. While some repetition is necessary with this design pattern, there are at least three opportunities for optimization.
 
 1.  `getAvastarMetadata()` checks that `_uint256 is a valid token` 4 times, each making a separate call to AvastarTeleporter.
 
@@ -1208,7 +1212,7 @@ Addressed in some cases. This is a very minor optimization that could be impleme
 
 It's possible for the external call in the `safeTransferFrom()` function in the OpenZeppelin [ERC-721 contract](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol) ERC-721 to trigger reentrancy in a specific edge case. An external call is made on [L344](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/cdf655f770cf8412fbd4d6aef3c55194a1233ef1/contracts/token/ERC721/ERC721.sol#L334) of the `_checkOnERC721Received()` function.
 
-This is an unlikely edgecase that would require a that malicious attacker to craft a function signature collision with `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`. The signature of this function is `0x150b7a02`. An example of a valid colliding function signature is `bytes4(keccak256("$$$_10284c80_$$$()"))`. If a contract with the later function is called with 0 ether value, it executes as a direct method `CALL` and can pass an arbitrary amount of gas. It does not execute as a `STATICCALL`, which would limit the gas passed to external caller. If the malicious function returns `0x150b7a02` at the end of execution it can execute arbitrary logic, including reentrancy.
+This is an unlikely edge case that would require a that malicious attacker to craft a function signature collision with `bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))`. The signature of this function is `0x150b7a02`. An example of a valid colliding function signature is `bytes4(keccak256("$$$_10284c80_$$$()"))`. If a contract with the later function is called with 0 ether value, it executes as a direct method `CALL` and can pass an arbitrary amount of gas. It does not execute as a `STATICCALL`, which would limit the gas passed to external caller. If the malicious function returns `0x150b7a02` at the end of execution it can execute arbitrary logic, including reentrancy.
 
 ##### Status
 
@@ -1350,15 +1354,15 @@ The following material was referenced throughout the audit process, though not s
 
 The following items are explicitly out of scope of the audit
 
-- Off-chain hash generation, including random number genereration
+- Off-chain hash generation, including random number generation
 - Minting management system
-- Key managemenet system for permissioned accounts
+- Key management system for permissioned accounts
 - Pricing system
 - AvastarsReplicantMinter smart contract
 
 ### A02: Test Coverage
 
-This test coverage represents the unit test coverage as of the [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/tree/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) commit. Test coverage has increased as developement continued. The test coverage report was generated with [solidity-coverage](https://github.com/sc-forks/solidity-coverage).
+This test coverage represents the unit test coverage as of the [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/tree/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) commit. Test coverage has increased as development continued. The test coverage report was generated with [solidity-coverage](https://github.com/sc-forks/solidity-coverage).
 
 | File                   | % Statements | % Branches | % Functions | % Lines |
 | :--------------------- | :----------- | :--------- | :---------- | :------ |
@@ -1463,7 +1467,7 @@ Serious issues that may be indirectly exploitable or exploitable under specific 
 
 ##### Medium
 
-Moderate severity issues or issues that may only be expoitable as edgecases. These issues should be addressed. Examples include:
+Moderate severity issues or issues that may only be exploitable as edge cases. These issues should be addressed. Examples include:
 
 - Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with moderate or indirect impact on security
 - Potentially dangerous privileges and permissions
@@ -1471,12 +1475,12 @@ Moderate severity issues or issues that may only be expoitable as edgecases. The
 
 ##### Low
 
-Low severity security issues with minor impact. This section may also include substaintial optimization or other recommendations. In some cases, these issues may represent the auditors subjective attitude about best practices, design decisions, and/or contract architecture.
+Low severity security issues with minor impact. This section may also include substantial optimization or other recommendations. In some cases, these issues may represent the auditors subjective attitude about best practices, design decisions, and/or contract architecture.
 
 Examples include:
 
 - Unplanned execution states, unauthorized state changes, and other unexpected contract behaviour with limited or no impact to security
-- Deviations from smart contract developement or Solidity best practices
+- Deviations from smart contract development or Solidity best practices
 - Unused or redundant code
 
 ##### Note
@@ -1487,7 +1491,7 @@ Minor recommendations with no direct security implementations. These include gas
 
 | Date     | Description                                 | Version | Commit                                                                                                        |
 | :------- | :------------------------------------------ | :------ | :------------------------------------------------------------------------------------------------------------ |
-| 05/23/20 | Avastars Smart Contract Audit Public Report | 0.3.0   | N/A                                                                                                           |
+| 05/24/20 | Avastars Smart Contract Audit Public Report | 0.3.0   | N/A                                                                                                           |
 | 05/02/20 | Post-Audit Follow Up Report                 | 0.2.0   | [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842) |
 | 28/01/20 | Avastars Smart Contract Audit Full Report   | 0.1.0   | [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea) |
 | 12/01/20 | Preliminary Assessment                      | N/A     | [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc) |
@@ -1552,7 +1556,7 @@ This audit incorporated the latest security patterns, best practices, and analys
   - [L10: TraitAccessApproved() Event Does Not Necessarily Reflect State Changes](#l10-traitaccessapproved-event-does-not-necessarily-reflect-state-changes)
   - [L11: Functions With Unnecessarily Permissive Visibility](#l11-functions-with-unnecessarily-permissive-visibility)
   - [L12: Limited Unit Test Coverage of Token Dependencies and Certain Branches of the Core Contracts](#l12-limited-unit-test-coverage-of-token-dependencies-and-certain-branches-of-the-core-contracts)
-  - [L13: Default Truffle Project Settings Targets Outdated Evm Version](#l13-default-truffle-project-settings-targets-outdated-evm-version)
+  - [L13: Default Truffle Project Settings Targets Outdated EVM Version](#l13-default-truffle-project-settings-targets-outdated-evm-version)
   - [L14: Unnecessary Duplication of Avastar Storage](#l14-unnecessary-duplication-of-avastar-storage)
   - [L15: Inconsistent Use of uint Alias](#l15-inconsistent-use-of-uint-alias)
   - [L16: AvastarReplicantMinter Contract Not Available](#l16-avastarreplicantminter-contract-not-available)
@@ -1561,7 +1565,7 @@ This audit incorporated the latest security patterns, best practices, and analys
   - [N02: Unused Library Method With External Call](#n02-unused-library-method-with-external-call)
   - [N03: Potentially Unsafe Use of abi.encodePacked() if Hashed in the Future](#n03-potentially-unsafe-use-of-abiencodepacked-if-hashed-in-the-future)
   - [N04: assembleArtwork() Relies on Exponentiation of Mixed Uint Types](#n04-assembleartwork-relies-on-exponentiation-of-mixed-uint-types)
-  - [N05: AvastarPrimeMinter Should Set Teleporter Contract in Constructor](#n05-avastarprimeminter-should-set-teleporter-contract-in-constructor)
+  - [N05: AvastarPrimeMinter Should Set AvastarTeleporter Contract in Constructor](#n05-avastarprimeminter-should-set-avastar-teleporter-contract-in-constructor)
   - [N06: Set Short Circuits With Mostly Likely Case First](#n06-set-short-circuits-with-mostly-likely-case-first)
   - [N07: State Variable Initialized With Default Value](#n07-state-variable-initialized-with-default-value)
   - [N08: Test Coverage Treats Invalid Execution States as Passing Conditions](#n08-test-coverage-treats-invalid-execution-states-as-passing-conditions)
@@ -1589,12 +1593,6 @@ This audit incorporated the latest security patterns, best practices, and analys
   - [A07: Disclaimer](#a07-disclaimer)
 - [Table of Contents](#table-of-contents)
 
-## Misc / Possibly Delete
-
-@note delete if not used...
-
-<img src={placeholder} width="300" alt="placeholder" />
-<img src={token} width="300" alt="token" />
 <svg>
   <defs>
     <filter id="id-of-your-filter">
