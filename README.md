@@ -1,6 +1,6 @@
 ### Avastars Smart Contract Audit Public Report
 
-This is a repository for the public report of the Avastars Smart Contract Audit. The report is available at [avastarsaudit.now.sh](https://avastarsaudit.now.sh).
+This is a repository for the public report of the [Avastars](https://github.com/Dapp-Wizards/Avastars-Contracts) Smart Contract Audit. The report is available at [avastarsaudit.now.sh](https://avastarsaudit.now.sh).
 
 ---
 
