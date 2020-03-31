@@ -26,7 +26,7 @@ v0.3.0<br />
 
 ## Introduction
 
-This is the public version of a recent smart contract security audit for the [Avastars NFT project](https://avastars.io/). The primary audit work was conducted between 12/01/20 and 05/02/20. Previous versions of the audit reports were delivered directly for the team's internal review in PDF format. Issues were addressed through ongoing communication with Avastars development team. This public version is revised for a wider audience, converted to a more accessible web format, and updated with additional diagrams and clarifying language.
+This is the public version of a recent smart contract security audit for the [Avastars NFT project](https://avastars.io/). The primary audit work was conducted between 12/01/20 and 05/02/20. Previous versions of the audit reports were delivered directly for the team's internal review in PDF format. Issues were addressed through ongoing communication with the Avastars development team. This public version is revised for a wider audience, converted to a more accessible web format, and updated with additional diagrams and clarifying language.
 
 Navigate through general sections via the sidenav links on the left. You can also jump to more granular links, such as each specific issue, by visiting the [Table of Contents](#table-of-contents). This site has a light/dark mode togglable via the sun/moon icon at the bottom of the sidenav.
 
@@ -38,7 +38,7 @@ The goal of this audit is to analyze the smart contracts for security vulnerabil
 
 ### Scope and Timeline
 
-For a full view of the audit timeline please refer to [Version History](#a05-version-history). The primary elements of this process include a Preliminary Assessment Report delivered on 12/01/20 based on commit [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea), the Full Audit Report delivered on 28/01/20 and based on commit [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc), and a Post-Audit Follow-Up Report delivered on 5/02/20 and based on commit [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842). Please see [Smart Contracts Reviewed](#a01-smart-contracts-reviewed) for a full description of the audit scope. Note that any commits after b2ac915 are not considered in this report.
+For a full view of the audit timeline please refer to [Version History](#a05-version-history). The primary elements of this process include a Preliminary Assessment Report delivered on 12/01/20 based on commit [1ea95a9](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/1ea95a92d0859610533f40acd1df68a91353c0ea), the Full Audit Report delivered on 28/01/20 based on commit [b8220ee](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc), and a Post-Audit Follow-Up Report delivered on 5/02/20 based on commit [b2ac915](https://github.com/Dapp-Wizards/Avastars-Contracts/commit/b2ac9159a034c27b3ccad98fa806af08be37a842). Please see [Smart Contracts Reviewed](#a01-smart-contracts-reviewed) for a full description of the audit scope. Note that any commits after b2ac915 are not considered in this report.
 
 Throughout the process, the Avastars team worked diligently to address the issues in the code base and quickly remediate major issues. I have reviewed each issue with the Avastars team and discussed the solutions. In some cases, the team acknowledged an issue but decided that the best course of action was not to change the contracts directly. In other cases, the team carefully considered whether the security concerns and/or design tradeoffs fell within an acceptable range of operational risk.
 
@@ -46,11 +46,11 @@ Throughout the process, the Avastars team worked diligently to address the issue
 
 ### Core Concept
 
-Avastars attempts to radically extend the metadata associated with NFT projects by taking the bold action of storing svg layers on-chain that can be recombined into the full artwork. The ambition of such a project attempts to solve an ongoing issue in NFT projects where the user owns an arbitrary data string but none of the art or other cultural associations that make up much of their appeal as collectables.
+Avastars attempts to radically extend the metadata associated with NFT projects by taking the bold action of storing svg layers on-chain that can be recombined into the full artwork associated with the token. The ambition of such a project attempts to solve an ongoing issue in NFT projects where the user owns an arbitrary data string but none of the art or other cultural associations that make up much of their appeal as collectables.
 
 ### Token Design
 
-Avastars tokens are ERC-721 compliant non-fungible tokens. An Avastar can be part one of two waves: Prime or Replicant. Primes are minted with unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored on-chain as svg layers.
+Avastar tokens are ERC-721 compliant non-fungible tokens (NFTs). An Avastar can be part one of two waves: Prime or Replicant. Primes are minted with unique genes and traits. Replicants recombine these traits in a 2nd wave. In addition, each Avastar has a gender, genome, and rarity level. These combine to give the Avastar a distinct set of visual traits from an enormous set of possibilities. The associated artwork and metadata is stored on-chain as svg layers.
 
 Replicants are produced from Primes by recombining Traits. The supply of Replicants is designed to never surpass the supply of Primes.
 
@@ -74,7 +74,7 @@ The maximum Avastar supply is bounded by the following constraints:
 
 - _S0: Promo series number_
 - _S1-5: Series number_
-- _G1-5 : Generation number _
+- _G1-5: Generation number _
 - _P: Primes, including Promos_
 - _R: Replicants_
 
@@ -185,7 +185,7 @@ The `sysAdmin` role has the highest level of permissions. It can assign any othe
 
 ##### onlyMinter
 
-The `minter` role has access to minting new Prime and Replicant tokens. In order for users to make purchases, the AvastarPrimeMinter and AvastarReplicantMinter contracts must hold the minter role in the AvastarTeleporter contract.
+The `minter` role has access to minting new Prime and Replicant tokens. In order for users to make purchases, the AvastarPrimeMinter and AvastarReplicantMinter contracts must hold the `minter` role in the AvastarTeleporter contract.
 
 ##### onlyOwner
 
@@ -195,14 +195,15 @@ The `owner` role controls the ability to view and withdraw ether from the sale o
 
 ### Documentation, Code Quality, and Testing
 
-The project is throughly and consistently documented. The code comments are rigorous and clearly explain technical decisions. The truffle project is well-organized. The high-level design decisions are explicit. The caliber of the Avastars documentation was a huge asset in moving smoothly through the audit process.The smart contracts are accompanied by suite of 105 unit tests (all passing) as well as gas estimates for each function call. The test suite has since been expanded to over 140 unit tests. See [Test Coverage](#a02-test-coverage) for more info.
+The project is thoroughly and consistently documented. The code comments are rigorous and clearly explain technical decisions. The truffle project is well-organized. The high-level design decisions are explicit. The caliber of the Avastars documentation was a huge asset in moving smoothly through the audit process. The smart contracts are accompanied by a suite of 105 unit tests (all passing) as well as gas estimates for each function call. The test suite has since been expanded to over 140 unit tests. See [Test Coverage](#a02-test-coverage) for more info.
 
 ### Security Considerations
 
-Based on the initially assessment of the smart contract architecture, the following areas received particular attention during the full audit:
+Based on the initial assessment of the smart contract architecture, the following areas received particular attention during the full audit:
 
 - input validation and type safety
-- minting, transferring, and approving access to tokens and traits ether deposits and withdraws
+- minting, transferring, and approving access to tokens and traits
+- ether deposits and withdraws
 - contract set up, upgradability, and interdependency
 - data validation during external calls and interface checks
 - admin permissions
@@ -220,9 +221,9 @@ Based on the initially assessment of the smart contract architecture, the follow
 ### General Assessment
 
 - 50 issues of varying severity were identified during the audit (one of which was retracted due to auditor error)
-- The vast majority of issues are relatively minor in nature. Many of the High and Medium severity issues were fixed will minimal changes to the code base
+- The vast majority of issues are relatively minor in nature. Many of the High and Medium severity issues were fixed with minimal changes to the code base
 - The code quality, test suite, and project documentation is of a consistently high caliber
-- The contract architecture attempts to minimize potential attack surfaces as much as possible. For example, there is only a single payable function in the entire project and only two functions designed to withdraw ether
+- The contract architecture attempts to minimize potential attack surfaces as much as possible. For example, there is only a single `payable` function in the entire project and only two functions designed to withdraw ether
 - The contracts use complex and state-intensive data structures to manage tokens. A number of the more serious vulnerabilities come from type or validation issues or unexpected state access
 - The contracts rely heavily on malleable properties like array lengths to keep track of critical global state values
 - The Avastars team has stated that optimizing gas costs is not the highest priority, particular for administrator tasks like initializing Traits. They are paying the cost of loading large amounts of state into the contracts as well as minting tokens on behalf of users
@@ -264,7 +265,7 @@ Successfully patched by the Avastars team in [Pull Request #1](https://github.co
 
 ##### Description
 
-This function `mintPrime()` relies on the mapping `countByGenerationAndSeries` to monitor the active token supply during the minting process. This value is supposed to verify whether the supply of Primes or Promos is bellow maximum allowable number of tokens. Every potential new token validated against a constant, either `MAX_PROMO_PRIMES_PER_GENERATION` or `MAX_PRIMES_PER_SERIES`, to ensure this supply cap is maintained. This happens on [L154-L158](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L154-158) in the PrimeFactory contract.
+The function `mintPrime()` relies on the mapping `countByGenerationAndSeries` to monitor the active token supply during the minting process. This value is supposed to verify whether the supply of Primes or Promos is below the maximum allowable number of tokens. Every potential new token validated against a constant, either `MAX_PROMO_PRIMES_PER_GENERATION` or `MAX_PRIMES_PER_SERIES`, to ensure this supply cap is maintained. This happens on [L154-L158](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L154-158) in the PrimeFactory contract.
 
 ```solidity
 if (_series == Series.PROMO) {
@@ -315,9 +316,9 @@ In addition, I recommend increasing the unit test coverage of PrimeFactory to ex
 
 ##### Description
 
-`approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) AvastarTeleporter, `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102) and `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory, and `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory are vulnerable to a subtle bug that enables unauthorized data access. While no immediate consequences have been uncovered, this issue comes very close to unlocking severe effects such as unauthorized or unexpected state modifications.
+`approveTraitAccess()` on [L97-L110](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarTeleporter.sol#L97-L110) in AvastarTeleporter, `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102) and `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory, and `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory are vulnerable to a subtle bug that enables unauthorized data access. While no immediate consequences have been uncovered, this issue comes very close to unlocking severe effects such as unauthorized or unexpected state modifications.
 
-While both Primes and Replicants maintain separate data structures (an array of structs), they also share a common Avastar struct stored in a global array. Under certain conditions, it is possible for a malicious actor to gain unauthorized access to the array of the other type. This is possible if there are more Primes than Replicants in a given Generation, or vice versa,
+While both Primes and Replicants maintain separate data structures (an array of structs), they also share a common Avastar struct stored in a global array. Under certain conditions, it is possible for a malicious actor to gain unauthorized access to the array of the other type. This is possible if there are more Primes than Replicants in a given Generation, or vice versa.
 
 Consider a scenario in which there are 5000 Primes and 3000 Replicants in `Generation.ONE`. The total Avastar count is 8000. A malicious user owns a Prime with a `tokenId` of #1500 and a `serial` of #1000. This user calls `getReplicantByTokenId(1500)` with their Prime. The only explicit check in this function easily passes.
 
@@ -331,7 +332,7 @@ The Avastar struct is loaded in memory and its generation and serial are used to
 Prime memory prime = primesByGeneration[uint8(avastar.generation)][uint256(avastar.serial)];
 ```
 
-Some functions use a similar pattern to make state changes. Consider a scenario with more Replicants in a Generation than Primes. `approveTraitAccess()` does not verify if the `tokenId` is a Prime or Replicant. Owners can store approvals for access to a Replicant's nonexistent `replicated` array. Out-of-bounds array access can have serious consequences, including the potential access, write, or overwrite arbitrary storage values. See [this example](https://github.com/Arachnid/uscc/tree/master/submissions-2017/doughoyte) for an extreme case of out-of-bounds array access leaning to arbitrary storage changes.
+Some functions use a similar pattern to make state changes. Consider a scenario with more Replicants in a Generation than Primes. `approveTraitAccess()` does not verify if the `tokenId` is a Prime or Replicant. Owners can store approvals for access to a Replicant's nonexistent `replicated` array. Out-of-bounds array access can have serious consequences, including the potential ability access, write, or overwrite arbitrary storage values. See [this example](https://github.com/Arachnid/uscc/tree/master/submissions-2017/doughoyte) for an extreme case of out-of-bounds array access leaning to arbitrary storage changes.
 
 ##### Recommendations
 
@@ -339,7 +340,7 @@ Some functions use a similar pattern to make state changes. Consider a scenario 
   - Add `require(avastar.wave == Wave.PRIME)` after the Avastar struct is loaded in `getPrimeByTokenId()` and `getPrimeReplicationByTokenId()`
   - Initialize the Avastar struct and perform the same check before the loop begins `approveTraitAccess()`
   - Add `require(avastar.wave == Wave.REPLICANT)` to `getReplicantByTokenId()`
-- Considering adding an uninitialized value to the Wave enum (similar to Gender) to reduce to risk of erroneous validation of uninitialized tokens validating as `Wave.PRIME` (0 for both cases)
+- Consider adding an uninitialized value to the Wave enum (similar to Gender) to reduce to risk of erroneous validation of uninitialized tokens validating as `Wave.PRIME` (0 for both cases)
 - Add an additional sanity check whenever `avastar.serial` is used to authenticate a state modifying function. For example, add `require (prime.id == avastar.id)` before the loop in `useTraits()`
 
 ##### Status
@@ -367,13 +368,13 @@ User-driven token minting of Primes is initialized in the AvastarPrimeMinter con
 
 This call should be explicitly validated. If it fails for any reason or returns unexpected data, the `purchasePrime()` function should reverse the changes to the user's and global ether balances.
 
-As presently written, this function returns two expected `uint256` values from the AvastarTeleporter contract: `tokenId` and `serial`. Under certain circumstances, however, it is possible for an external sub-call to fail or return unexpected values without the main transaction reverting. In such a case, the user's ether balance, the ether balance available to the owner to withdraw can be erroneously changed in the contract's storage. Furthermore, `tokenId` and `serial` can be returned as incorrect values.
+As presently written, this function returns two expected `uint256` values from the AvastarTeleporter contract: `tokenId` and `serial`. Under certain circumstances, however, it is possible for an external sub-call to fail or return unexpected values without the main transaction reverting. In such a case, the user's ether balance or the ether balance available to the owner to withdraw can be erroneously changed in the contract's storage. Furthermore, `tokenId` and `serial` can be returned as incorrect values.
 
 For example, if the AvastarTeleporter returns data of an incorrect length or type, AvastarPrimeMinter will attempt to decode the calldata into two `uint256` values, regardless of their original type or length.
 
 ##### Recommendation
 
-- One option for explicitly validating the call uses the lower-level raw call syntax. This exposes access to two return values: a `bool` indicating whether the call succeeded and a `bytes memory` value with any return data from the function being called. The later can be explicitly checked for the expected length of two `uint256` return values.
+One option for explicitly validating the call uses the lower-level raw call syntax. This exposes access to two return values: a `bool` indicating whether the call succeeded and a `bytes memory` value with any return data from the function being called. The later can be explicitly checked for the expected length of two `uint256` return values.
 
 The following section of code provides and example implementation of this concept. The logic of the function is:
 
@@ -450,7 +451,7 @@ Finally, consider if AvastarPrimeMinter needs the return values at all. They are
 
 This issue was acknowledged and determined to be low risk based on the trust model between the two contracts. New unit tests were added to check for failing conditions.
 
-One remaining risk is this (highly contrived) hypothetical in which `purchasePrime()` receives a longer than expected return value and incorrectly parses the result, leading to incorrect data being logged for `tokenId` and `serial`. The likelihood of this case occurring increases if the AvastarTeleporter contract is untrusted or if it modifies the behaviour of the `mintPrimes()` function.
+One remaining risk is this (highly contrived) hypothetical in which `purchasePrime()` receives a longer than expected return value and incorrectly parses the result, leading to incorrect data being logged for `tokenId` and `serial`. The likelihood of this case occurring increases if the AvastarTeleporter contract is untrusted or if it modifies the behaviour of the `mintPrime()` function.
 
 Consider a modified `mintPrime()` function that returns 128 bytes of garbage data. `purchasePrime()` accepts this data without generating an error or halting execution, despite the return being longer than the expected 64 bytes. It still parses the first and second 32-byte words as `uint256`, regardless of their original data type.
 
@@ -496,7 +497,7 @@ There have also been changes to the input validations in these functions which a
 metadata = strConcat(metadata, (gender == Gender.MALE) ? ' Male ' : ' Female ');
 ```
 
-`mintReplicant()` also removes a check that the owner is not `address(0)`. However, this is validated again in the ERC-721 `_mint()`. This redundancy allows the function to revert as expected if `address(0)` is passed as the token owner.
+`mintReplicant()` also removes a check that the owner is not `address(0)`. However, this is validated again in the ERC-721 `_mint()` function. This redundancy allows the function to revert as expected if `address(0)` is passed as the token owner.
 
 ## Medium Severity
 
@@ -1078,7 +1079,7 @@ if (_series == Series.PROMO) {
 }
 ```
 
-In this example from `mintPrimes()` the if / else statements could flip.
+In this example from `mintPrime()` the if / else statements could flip.
 
 ##### Status
 
