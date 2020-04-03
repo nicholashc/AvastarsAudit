@@ -525,7 +525,7 @@ The `minters` should:
 - Maintain a clear priority queue for deposits in the event of multiple users attempting to claim the same hash
 - Balance ether available for gas between the minters
 - Maintain reliable access to the Ethereum network with redundancy in the node infrastructure
-- Handling potential conflicts arrising from uncled blocks
+- Handling potential conflicts arising from uncled blocks
 
 Risks:
 
@@ -629,7 +629,7 @@ The function checks if the caller owns the tokenIds provided in the `_primeIds` 
 
 - Do not allow dynamic arrays as input in an external or public function. When an array must be used, define a sensible fixed length. For example: `uint256[8] calldata _primeIds`
 - Favour explicit validation of inputs rather than relying on integer type lengths to enforce the range of acceptable values. Since it is unclear that the maximum number the type can hold is acting as a validation, it may fail silently or be unintentionally removed in future versions of the code base
-- Do not allow a user-controled parameter to dictate the upper bound of a loop
+- Do not allow a user controled parameter to dictate the upper bound of a loop
 - The event `TraitAccessApproved(_handler, _primeIds)` should also validate sensible limits before accepting an array
 
 ##### Status
@@ -786,7 +786,7 @@ The Avastars Team has decided that the impact of this issue does not necessitate
 
 ##### Description
 
-In `withdrawDepositorBalance()` on [L175-L184](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L175-L184) in AvastarPrimeMinter, state access occurs after an external `transfer` call to an arbitrary address. Accessing state after an untrusted external call brings potential risk for reentrancy, particularly now that `transfer` is able to trigger code execution with the updated storage opcode costs. If the call failsm incorrect data might be logged in the event.
+In `withdrawDepositorBalance()` on [L175-L184](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AvastarPrimeMinter.sol#L175-L184) in AvastarPrimeMinter, state access occurs after an external `transfer` call to an arbitrary address. Accessing state after an untrusted external call brings potential risk for reentrancy, particularly now that `transfer` is able to trigger code execution with the updated storage opcode costs. If the call fails, incorrect data might be logged in the event.
 
 ##### Recommendation
 
@@ -1377,7 +1377,7 @@ The following material was referenced throughout the audit process, though not s
 
 ##### Not Available / Out of Scope
 
-The following items are explicitly out of scope of the audit
+The following items are explicitly out of scope of the audit:
 
 - Off-chain hash generation, including random number generation
 - Minting management system
@@ -1533,11 +1533,11 @@ The following comments were part of an initial feasibility analysis completed 09
 5. It is possible to store critical values in tightly-packed structs or other efficient data structures. Repeated values can be stored as constants. The original image can still be reconstructed completely without losing information. The tradeoff is increased smart contract code and image reconstruction complexity.
 6. In my honest opinion, attempting to store the full xml-tagged svgs, particularly poorly optimized svgs, is just a bad fit for the current capabilities of smart contracts. It's a square peg in a round hole. If the project was just beginning, my advice would be: consider the most restrictive element of the project first and design to those constraints.
 7. If having the whole file on-chain is truly important, consider alternative optimization software, compression software, and establish strict design processes for the artists that produce much smaller code footprints.
-8. There may be a point where saving some gas is not worth the cost of redeveloping large sections of code base.
+8. There may be a point where saving some gas is not worth the cost of redeveloping large sections of the code base.
 
 ### A07: Disclaimer
 
-This audit incorporated the latest security patterns, best practices, and analysis tools. However, it does not provide a guarantee for the security of the code, the absence of future bugs, or the completeness or correctness of its findings. Protocol changes, an adversarial production environment, and the experimental nature of smart contract technology present ongoing risk to the security of this, or any, application on the Ethereum blockchain.
+This audit incorporates the latest security patterns, best practices, and analysis tools. However, it does not provide a guarantee for the security of the code, the absence of future bugs, or the completeness or correctness of its findings. Protocol changes, an adversarial production environment, and the experimental nature of smart contract technology present ongoing risk to the security of this, or any, application on the Ethereum blockchain.
 
 ## Table of Contents
 
