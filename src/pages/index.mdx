@@ -914,7 +914,7 @@ struct Trait {
 
 ##### Description
 
-In the function `setAttribution()` on [152-161](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L152-L161) in TraitFactory it's possible for a `sysAdmin` to accidentally or maliciously set the attribution of a Generation as an empty string.
+In the function `setAttribution()` on [L152-L161](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/TraitFactory.sol#L152-L161) in TraitFactory it's possible for a `sysAdmin` to accidentally or maliciously set the attribution of a Generation as an empty string.
 
 ##### Recommendation
 
@@ -932,7 +932,7 @@ The `approveTraitAccess()` function on [L97-L110](https://github.com/Dapp-Wizard
 
 ##### Status
 
-[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L101-L120). The function now checks that array length for `_primeIds` is greater than 0. It will also only complete execution if there is a state change.
+[Addressed](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b2ac9159a034c27b3ccad98fa806af08be37a842/contracts/AvastarTeleporter.sol#L101-L120). The function now checks that the array length for `_primeIds` is greater than 0. It will also only complete execution if there is a state change.
 
 ### L11: Functions With Unnecessarily Permissive Visibility
 
@@ -940,7 +940,7 @@ The `approveTraitAccess()` function on [L97-L110](https://github.com/Dapp-Wizard
 
 The following functions are not used internally and can safely be changed from `public` to `external`.
 
-- `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102), `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory
+- `getPrimeByTokenId()` on [L79-L102](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L79-L102) and `getPrimeReplicationByTokenId()` on [L110-L123](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/PrimeFactory.sol#L110-L123) in PrimeFactory
 - `getReplicantByTokenId()` on [L64-L85](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/ReplicantFactory.sol#L64-L85) in ReplicantFactory
 - `getPrimeByTokenId()` on [L49-L59](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/IAvastarTeleporter.sol#L49-L59) and `getReplicantByTokenId()` on [L71-L80](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/IAvastarTeleporter.sol#L71-L80) in IAvastarTeleporter
 - `pause()` on [L159-162](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L159-L162) and `unpause()` on [L167-170](https://github.com/Dapp-Wizards/Avastars-Contracts/blob/b8220ee9335167fd3e5d6c5691b20a3a4bb2a3dc/contracts/AccessControl.sol#L167-L170) in AccessControl
@@ -954,19 +954,19 @@ Addressed. Visibility changed to `external` on all 8 recommended functions.
 
 ##### Description
 
-See [Test Coverage][#a02-test-coverage] section in the Appendix for more detail.
+See [Test Coverage](#a02-test-coverage) section in the Appendix for more detail.
 
-A significant percentage of the branches in AvastarPrimeMinter, AvastarTeleporter, PrimeFactory, ReplicantFactory, TraitFactory have limited or no unit test coverage. Large parts of the inherited token functionality are not covered by unit tests. Testing the interactions of the OpenZeppelin and Avastars contracts may uncover bugs not present in common implementations of the standard ERC-721 contracts.
+A significant percentage of the branches in AvastarPrimeMinter, AvastarTeleporter, PrimeFactory, ReplicantFactory, and TraitFactory have limited or no unit test coverage. Large parts of the inherited token functionality are not covered by unit tests. Testing the interactions of the OpenZeppelin and Avastars contracts may uncover bugs not present in common implementations of the standard ERC-721 contracts.
 
 ##### Status
 
-Improved. Unit test coverage improved in areas identified in the audit and in general. Improving coverage for other under-tested functionality like token approval and transfer is a goal.
+Improved. Unit test coverage improved in areas identified in the audit and in general. Improving coverage for other under-tested functionality like token approval and transfer is a stated goal of the Avastars Team.
 
 ### L13: Default Truffle Project Settings Targets Outdated Evm Version
 
 ##### Description
 
-By default, the 0.5.12 solc compiler targets the `petersburg` evmVersion. Using the new opcodes and updated gas pricing available in the `istanbul` evmVersion will better replicate current conditions of the main net. The default evmVersion was changed to `istanbul` in solc 0.5.14. (Note: while `berlin` is the most recent evmVersion available it is still considered experimental).
+By default, the 0.5.12 solc compiler targets the `petersburg` evmVersion. Using the new opcodes and updated gas pricing available in the `istanbul` evmVersion will better replicate current conditions of mainnet. The default evmVersion was changed to `istanbul` in solc 0.5.14. (Note: while `berlin` is the most recent evmVersion available it is still considered experimental).
 
 ##### Status
 
