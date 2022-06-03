@@ -17,7 +17,7 @@
     "@theme-ui/sidenav": "^0.3.1",
     "gatsby": "^2.19.32",
     "gatsby-cli": "^2.11.1",
-    "gatsby-plugin-mdx": "^1.0.77",
+    "gatsby-plugin-mdx": "^2.14.1",
     "gatsby-plugin-sharp": "^2.4.7",
     "gatsby-plugin-theme-ui": "^0.3.0",
     "gatsby-remark-images": "^3.1.46",
